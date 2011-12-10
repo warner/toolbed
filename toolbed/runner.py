@@ -21,19 +21,24 @@ class BasedirArgument:
         if basedir is not None:
             self["basedir"] = basedir
 
+class StartArguments(BasedirArgument):
+    def parseArgs(self, basedir=None, *twistd_args):
+        self.twistd_args = twistd_args
+        BasedirArgument.parseArgs(self, basedir)
+
 class CreateNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     optParameters = [
         ("webport", "p", "tcp:5775:interface=127.0.0.1",
          "TCP port for the node's HTTP interface."),
         ]
 
-class StartNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
+class StartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):
     optFlags = [
         ("no-open", "n", "Do not automatically open the control panel"),
         ]
 class StopNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     pass
-class RestartNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
+class RestartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):
     def postOptions(self):
         self["no-open"] = False
 class OpenOptions(BasedirParameterMixin, BasedirArgument, usage.Options):

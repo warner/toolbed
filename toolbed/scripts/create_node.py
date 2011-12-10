@@ -1,4 +1,4 @@
-import os, sys
+import os
 from .. import database
 
 def create_node(so, stdout, stderr):
