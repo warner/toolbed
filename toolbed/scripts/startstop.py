@@ -1,6 +1,5 @@
 import os, time, signal
 from twisted.scripts import twistd
-from twisted.application import service
 from twisted.python import usage
 
 # by the time 'tool start' is safe to run, all our dependencies are
