@@ -12,27 +12,31 @@ except ImportError:
     print >>sys.stderr, "Please run 'python setup.py build'"
     sys.exit(1)
 
-class BasedirMixin:
+class BasedirParameterMixin:
     optParameters = [
         ("basedir", "d", os.path.expanduser("~/.toolbed"), "Base directory"),
         ]
+class BasedirArgument:
+    def parseArgs(self, basedir=None):
+        if basedir is not None:
+            self["basedir"] = basedir
 
-class CreateNodeOptions(BasedirMixin, usage.Options):
+class CreateNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     optParameters = [
         ("webport", "p", "tcp:5775:interface=127.0.0.1",
          "TCP port for the node's HTTP interface."),
         ]
 
-class StartNodeOptions(BasedirMixin, usage.Options):
+class StartNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     optFlags = [
         ("no-open", "n", "Do not automatically open the control panel"),
         ]
-class StopNodeOptions(BasedirMixin, usage.Options):
+class StopNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     pass
-class RestartNodeOptions(BasedirMixin, usage.Options):
+class RestartNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     def postOptions(self):
         self["no-open"] = False
-class OpenOptions(BasedirMixin, usage.Options):
+class OpenOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     pass
 
 class Options(usage.Options):
@@ -92,5 +96,10 @@ def run(args, stdout, stderr):
         return 1
     command = config.subCommand
     so = config.subOptions
-    rc = DISPATCH[command](so, stdout, stderr)
-    return rc
+    try:
+        rc = DISPATCH[command](so, stdout, stderr)
+        return rc
+    except ImportError, e:
+        print >>stderr, "--- ImportError ---"
+        print >>stderr, "Please run 'python setup.py build'"
+        return 1
