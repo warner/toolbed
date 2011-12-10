@@ -106,5 +106,6 @@ def run(args, stdout, stderr):
         return rc
     except ImportError, e:
         print >>stderr, "--- ImportError ---"
+        print >>stderr, e
         print >>stderr, "Please run 'python setup.py build'"
         return 1
