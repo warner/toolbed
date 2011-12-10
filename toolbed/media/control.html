@@ -1,9 +1,35 @@
 <html>
- <body>
-  <h1>Control Panel</h1>
-  <p>Token is good, now let's get down to business!</p>
-  <script>
-    var token = "%s";
-  </script>
- </body>
+<head>
+ <link rel="stylesheet" href="/media/tool.css" type="text/css" />
+ <link rel="stylesheet" href="/media/css/ui-lightness/jquery-ui-1.8.16.custom.css" type="text/css" />
+ <script type="text/javascript" src="/media/jquery-1.7.1.min.js"></script>
+ <script type="text/javascript" src="/media/jquery-ui-1.8.16.custom.min.js"></script>
+ <script type="text/javascript" src="/media/control.js"></script>
+</head>
+
+<body>
+ <h1>Control Panel</h1>
+ <p>Token is good, now let's get down to business!</p>
+ <script>
+   var token = "%(token)s";
+ </script>
+
+ <form class="reload-form" action="control" method="post">
+  <input type="hidden" name="token" value="%(token)s">
+  <input type="submit" value="Reload Control Panel" name="submit">
+ </form>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-node-control">Node Control</a></li>
+    <li><a href="#tabs-2">Invitations</a></li>
+    <li><a href="#tabs-3">Buddy List</a></li>
+  </ul>
+  <div id="tabs-node-control">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</div>
+  <div id="tabs-2">Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.</div>
+  <div id="tabs-3">Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.</div>
+</div>
+
+
+</body>
 </html>

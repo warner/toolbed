@@ -3,9 +3,10 @@ from twisted.application import service, strports
 from twisted.web import server, static, resource
 from .nonce import make_nonce
 
-def media(media_filename):
-    fn = os.path.join(os.path.dirname(__file__), "media", media_filename)
-    f = open(fn, "rb")
+MEDIA_DIRNAME = os.path.join(os.path.dirname(__file__), "media")
+
+def read_media(fn):
+    f = open(os.path.join(MEDIA_DIRNAME,fn), "rb")
     #data = f.read().decode("utf-8")
     data = f.read()
     f.close()
@@ -34,7 +35,7 @@ class Control(resource.Resource):
         token = make_nonce()
         self.tokens.add(token)
         request.setHeader("content-type", "text/html")
-        return media("login.html") % token
+        return read_media("login.html") % token
 
     def render_POST(self, request):
         token = request.args["token"][0]
@@ -42,7 +43,7 @@ class Control(resource.Resource):
             request.setHeader("content-type", "text/plain")
             return ("Sorry, this session token is expired,"
                     " please run 'tool open' again\n")
-        return media("control.html") % token
+        return read_media("control.html") % {"token": token}
 
 
 class Root(resource.Resource):
@@ -51,6 +52,7 @@ class Root(resource.Resource):
         resource.Resource.__init__(self)
         self.putChild("", static.Data("Hello\n", "text/plain"))
         self.putChild("control", Control(db))
+        self.putChild("media", static.File(MEDIA_DIRNAME))
 
 class WebPort(service.MultiService):
     def __init__(self, basedir, node, db):
