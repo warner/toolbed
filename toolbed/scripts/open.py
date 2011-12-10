@@ -2,7 +2,7 @@
 import os
 import webbrowser
 from . import webwait
-from .. import database
+from .. import database, nonce
 
 def open_control_panel(so, out, err):
     basedir = os.path.abspath(so["basedir"])
@@ -20,4 +20,7 @@ def open_control_panel(so, out, err):
     URL = "http://localhost:%d/" % portnum
     webwait.wait(URL)
     print "Node appears to be running, opening browser"
-    webbrowser.open(URL)
+    n = nonce.make_nonce()
+    c.execute("INSERT INTO webui_initial_nonces VALUES (?)", (n,))
+    db.commit()
+    webbrowser.open(URL+"control?nonce=%s" % n)

@@ -7,3 +7,8 @@ CREATE TABLE node -- contains one row
 (
  webport STRING
 );
+
+CREATE TABLE webui_initial_nonces
+(
+ nonce STRING
+);
