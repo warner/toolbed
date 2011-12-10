@@ -1,15 +1,15 @@
+import os
 from twisted.application import service, strports
 from twisted.web import server, static, resource
 from .nonce import make_nonce
 
-REDIRECT_HTML = '''
-<html>
-<body>
-<form action="control" method="post">
-<input type="hidden" name="token" value="%s">
-<input type="submit" value="Begin Session" name="submit">
-</form>
-'''
+def media(media_filename):
+    fn = os.path.join(os.path.dirname(__file__), "media", media_filename)
+    f = open(fn, "rb")
+    #data = f.read().decode("utf-8")
+    data = f.read()
+    f.close()
+    return data
 
 class Control(resource.Resource):
     def __init__(self, db):
@@ -34,7 +34,7 @@ class Control(resource.Resource):
         token = make_nonce()
         self.tokens.add(token)
         request.setHeader("content-type", "text/html")
-        return REDIRECT_HTML % token
+        return media("login.html") % token
 
     def render_POST(self, request):
         token = request.args["token"][0]
@@ -42,7 +42,7 @@ class Control(resource.Resource):
             request.setHeader("content-type", "text/plain")
             return ("Sorry, this session token is expired,"
                     " please run 'tool open' again\n")
-        return "Now let's get down to business!\n"
+        return "Token is good, now let's get down to business!\n"
 
 
 class Root(resource.Resource):
