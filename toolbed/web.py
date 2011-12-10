@@ -42,7 +42,7 @@ class Control(resource.Resource):
             request.setHeader("content-type", "text/plain")
             return ("Sorry, this session token is expired,"
                     " please run 'tool open' again\n")
-        return "Token is good, now let's get down to business!\n"
+        return media("control.html") % token
 
 
 class Root(resource.Resource):
