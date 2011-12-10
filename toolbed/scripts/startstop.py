@@ -39,9 +39,14 @@ def start(so, out, err):
     # this spawns off a child process, and the parent calls os._exit(0), so
     # there's no way for us to get control afterwards, even with 'except
     # SystemExit'. So if we want to do anything with the running child, we
-    # must either fork first (and have our child wait for the runApp() child
-    # to get running), or have the user run a separate some time after this
-    # one exits.
+    # have two options:
+    #  * fork first, and have our child wait for the runApp() child to get
+    #    running. (note: just fork(). This is easier than fork+exec, since we
+    #    don't have to get PATH and PYTHONPATH set up, since we're not
+    #    starting a *different* process, just cloning a new instance of the
+    #    current process)
+    #  * or have the user run a separate command some time after this one
+    #    exits.
     print "starting node in %s" % basedir
     twistd.runApp(twistd_config)
 
