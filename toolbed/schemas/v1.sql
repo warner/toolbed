@@ -5,8 +5,7 @@ CREATE TABLE `version`
 
 CREATE TABLE `node` -- contains one row
 (
- `webport` STRING,
- `relay_location` STRING
+ `webport` STRING
 );
 
 CREATE TABLE `services`
@@ -22,4 +21,11 @@ CREATE TABLE `webui_initial_nonces`
 CREATE TABLE `relay_config` -- contains one row
 (
  `relayport` STRING
+);
+
+CREATE TABLE `client_config` -- contains one row
+(
+ `privkey` STRING,
+ `pubkey` STRING,
+ `relay_location` STRING
 );

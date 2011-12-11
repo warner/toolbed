@@ -22,12 +22,17 @@ class Client(service.MultiService, protocol.ClientFactory):
         service.MultiService.__init__(self)
         self.db = db
         c = self.db.cursor()
-        c.execute("SELECT `relay_location` FROM `node`")
+        c.execute("SELECT `relay_location` FROM `client_config`")
         relay_location = str(c.fetchone()[0])
         self.endpoint = endpoints.clientFromString(reactor, relay_location)
         self.connection = None
 
         self.pending_messages = collections.deque()
+
+        c.execute("SELECT `pubkey` FROM `client_config`");
+        self.sk_s = str(c.fetchone()[0])
+        self.send_message_to_relay("subscribe", self.sk_s)
+
 
     def maybe_send_messages(self):
         if not self.connection:
