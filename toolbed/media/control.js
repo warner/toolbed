@@ -14,12 +14,15 @@ function fill(what, element) {
 };
 
 $(function() {
-      $("#tabs").tabs({selected: -1});
-      $("#tabs").bind('tabsshow', function(event, ui)
-                      {
-                          fill("webport", "#webport");
-                          fill("relay_location", "#relay_location");
-                          fill("pubkey", "#pubkey");
-                          return true;
-                          });
+      $("#tabs").tabs({selected: -1,
+                       show: function(event, ui)
+                       {
+                           if (ui.index == 0) {
+                               fill("webport", "#webport");
+                               fill("relay_location", "#relay_location");
+                               fill("pubkey", "#pubkey");
+                           }
+                           return true;
+                       }
+                       });
 });
