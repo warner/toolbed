@@ -39,27 +39,35 @@ class Relay(resource.Resource):
         request.setHeader("content-type", "text/html")
         return read_media("relay.html")
 
+
 class API(resource.Resource):
-    def __init__(self, tokens, db):
+    def __init__(self, tokens, db, client):
         resource.Resource.__init__(self)
         self.tokens = tokens
         self.db = db
+        self.client = client
+
     def render_POST(self, request):
         r = json.loads(request.content.read())
         if not r["token"] in self.tokens:
             request.setResponseCode(http.UNAUTHORIZED, "bad token")
             return "Invalid token"
+        method = str(r["method"])
         c = self.db.cursor()
         data = "unknown query"
-        if r["method"] == "webport":
+        if method == "webport":
             c.execute("SELECT `webport` FROM `node`")
             data = str(c.fetchone()[0])
-        if r["method"] == "relay_location":
+        elif method == "relay_location":
             c.execute("SELECT `relay_location` FROM `client_config`")
             data = str(c.fetchone()[0])
-        if r["method"] == "pubkey":
+        elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             data = str(c.fetchone()[0])
+        elif method == "sendMessage":
+            self.client.control_sendMessage(r["args"])
+        else:
+            raise ValueError("Unknown method '%s'" % method)
         return json.dumps({"text": data})
 
 class Control(resource.Resource):
@@ -67,7 +75,6 @@ class Control(resource.Resource):
         resource.Resource.__init__(self)
         self.db = db
         self.tokens = set()
-        self.putChild("api", API(self.tokens, self.db))
 
     def render_GET(self, request):
         request.setHeader("content-type", "text/plain")
@@ -103,7 +110,6 @@ class Root(resource.Resource):
     def __init__(self, db):
         resource.Resource.__init__(self)
         self.putChild("", static.Data("Hello\n", "text/plain"))
-        self.putChild("control", Control(db))
         self.putChild("media", static.File(MEDIA_DIRNAME))
 
 class WebPort(service.MultiService):
@@ -113,14 +119,20 @@ class WebPort(service.MultiService):
         self.node = node
         self.db = db
 
-        webport = str(node.get_node_config("webport"))
         root = Root(db)
         if node.relay:
             r = Relay()
-            rapi = RelayAPI(self.db, node.relay)
+            rapi = RelayAPI(db, node.relay)
             r.putChild("api", rapi)
             root.putChild("relay", r)
+        if node.client:
+            c = Control(db)
+            capi = API(c.tokens, db, node.client)
+            c.putChild("api", capi)
+            root.putChild("control", c)
+
         site = server.Site(root)
+        webport = str(node.get_node_config("webport"))
         s = strports.service(webport, site)
         s.setServiceParent(self)
 

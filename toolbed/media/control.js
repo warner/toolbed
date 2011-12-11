@@ -14,6 +14,14 @@ function fill(method, element) {
     doAPI(method, {}, function(data) { $(element).text(data.text); });
 };
 
+function sendMessage(event) {
+    console.log("sendMessage");
+    var args = {to: $("#message-to").val(),
+                message: $("#message-message").val()
+               };
+    doAPI("sendMessage", args, function(){alert("Sent!")});
+};
+
 $(function() {
       $("#tabs").tabs({selected: -1,
                        show: function(event, ui)
@@ -26,4 +34,5 @@ $(function() {
                            return true;
                        }
                        });
+      $("#send-message").on("click", sendMessage);
 });

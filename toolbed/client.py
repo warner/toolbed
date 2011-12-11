@@ -59,3 +59,6 @@ class Client(service.MultiService, protocol.ClientFactory):
 
     def message_received(self, messages):
         print "RECEIVED", messages
+
+    def control_sendMessage(self, args):
+        print "SENDMESSAGE", args

@@ -32,7 +32,16 @@
       <li>Client Pubkey: <span class="fixed" id="pubkey">?</span></li>
     </ul>
   </div>
-  <div id="tabs-invitations">Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.</div>
+  <div id="tabs-invitations">
+    <div>Pending Invitations: <ul id="pending-invitations"></ul></div>
+    <div>Send Message:
+      <ul>
+        <li>To: <input id="message-to" type="text" name="address"/></li>
+        <li>Message: <input id="message-message"type="text" name="message"/></li>
+        <li><input id="send-message"  type="submit" value="Send!"/></li>
+      </ul>
+    </div>
+  </div>
   <div id="tabs-buddy-list">Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.</div>
 </div>
 
