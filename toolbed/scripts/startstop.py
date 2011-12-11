@@ -1,21 +1,23 @@
 import os, time, signal
+# Twisted (and our other dependencies) are available, but do not import
+# anything that needs the reactor at this top level, so that 'tool start
+# basedir --reactor=foo' will work
 from twisted.scripts import twistd
 from twisted.python import usage
-
-# by the time 'tool start' is safe to run, all our dependencies are
-# available, so these imports are allowed to pull in everything
-
-from .. import node
 
 class MyTwistdConfig(twistd.ServerOptions):
     subCommands = [("XYZ", None, usage.Options, "node")]
 
 class MyPlugin:
     tapname = "xyznode"
-    def __init__(self, ser):
-        self.ser = ser
+    def __init__(self, basedir, dbfile):
+        self.basedir = basedir
+        self.dbfile = dbfile
     def makeService(self, so):
-        return self.ser
+        # delay this import as late as possible, to allow twistd's code to
+        # accept --reactor= selection
+        from .. import node
+        return node.Node(self.basedir, self.dbfile)
 
 def start(so, out, err):
     basedir = os.path.abspath(so["basedir"])
@@ -25,7 +27,6 @@ def start(so, out, err):
         return 1
     # now prepare to turn into a twistd process
     os.chdir(basedir)
-    n = node.Node(basedir, dbfile) # this is the Service
     twistd_args = so.twistd_args + ("XYZ",)
     twistd_config = MyTwistdConfig()
     try:
@@ -34,7 +35,7 @@ def start(so, out, err):
         print twistd_config
         print "tool %s: %s" % (so.subCommand, ue)
         return 1
-    twistd_config.loadedPlugins = {"XYZ": MyPlugin(n)}
+    twistd_config.loadedPlugins = {"XYZ": MyPlugin(basedir, dbfile)}
     # this spawns off a child process, and the parent calls os._exit(0), so
     # there's no way for us to get control afterwards, even with 'except
     # SystemExit'. So if we want to do anything with the running child, we
