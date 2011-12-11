@@ -1,6 +1,6 @@
-import os
+import os, json
 from twisted.application import service, strports
-from twisted.web import server, static, resource
+from twisted.web import server, static, resource, http
 from .nonce import make_nonce
 
 MEDIA_DIRNAME = os.path.join(os.path.dirname(__file__), "media")
@@ -12,11 +12,30 @@ def read_media(fn):
     f.close()
     return data
 
+class API(resource.Resource):
+    def __init__(self, tokens, db):
+        resource.Resource.__init__(self)
+        self.tokens = tokens
+        self.db = db
+    def render_POST(self, request):
+        r = json.loads(request.content.read())
+        if not r["token"] in self.tokens:
+            request.setResponseCode(http.UNAUTHORIZED, "bad token")
+            return "Invalid token"
+        c = self.db.cursor()
+        data = "unknown query"
+        if r["what"] == "webport":
+            c.execute("SELECT webport FROM node")
+            data = str(c.fetchone()[0])
+        return json.dumps({"text": data})
+
 class Control(resource.Resource):
     def __init__(self, db):
         resource.Resource.__init__(self)
         self.db = db
         self.tokens = set()
+        self.putChild("api", API(self.tokens, self.db))
+
     def render_GET(self, request):
         request.setHeader("content-type", "text/plain")
         if "nonce" not in request.args:
