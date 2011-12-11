@@ -22,13 +22,13 @@ class RelayAPI(resource.Resource):
         c = self.db.cursor()
         data = None
         text = "unknown query"
-        if r["what"] == "webport":
+        if r["method"] == "webport":
             c.execute("SELECT `webport` FROM `node`")
             text = str(c.fetchone()[0])
-        if r["what"] == "relayport":
+        if r["method"] == "relayport":
             c.execute("SELECT `relayport` FROM `relay_config`")
             text = str(c.fetchone()[0])
-        if r["what"] == "clients":
+        if r["method"] == "clients":
             data = self.relay.get_clients_jsonable()
         if data is not None:
             return json.dumps(data)
@@ -51,13 +51,13 @@ class API(resource.Resource):
             return "Invalid token"
         c = self.db.cursor()
         data = "unknown query"
-        if r["what"] == "webport":
+        if r["method"] == "webport":
             c.execute("SELECT `webport` FROM `node`")
             data = str(c.fetchone()[0])
-        if r["what"] == "relay_location":
+        if r["method"] == "relay_location":
             c.execute("SELECT `relay_location` FROM `client_config`")
             data = str(c.fetchone()[0])
-        if r["what"] == "pubkey":
+        if r["method"] == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             data = str(c.fetchone()[0])
         return json.dumps({"text": data})

@@ -1,41 +1,38 @@
 
-function fill(what, element) {
-    $(element).text("updating...");
+function doAPI(method, args, callback) {
     $.ajax({type: "POST",
             url: "/relay/api",
             contentType: "text/json", // what we send
-            data: JSON.stringify({what: what}),
+            data: JSON.stringify({method: method, args: args}),
             // data: {a:foo,b:bar} makes .ajax to serialize like "a=foo&b=bar"
             dataType: 'json', // what we expect, and how to parse it
-            success: function(data) { $(element).text(data.text); }
-           });
+            success: callback });
 };
 
-function fill_clients(what, element) {
+function fill(method, element) {
+    $(element).text("updating...");
+    doAPI(method, {}, function(data) { $(element).text(data.text); });
+};
+
+function fill_clients(method, element) {
     $(element).empty();
     $(element).append($("<li/>").text("updating.."));
-    $.ajax({type: "POST",
-            url: "/relay/api",
-            contentType: "text/json", // what we send
-            data: JSON.stringify({what: what}),
-            dataType: 'json', // what we expect, and how to parse it
-            success: function(data)
-            {
-                $(element).empty();
-                for (var i=0; i <data.length; i++) {
-                    var c = $("<li/>").text("client "+i);
-                    $(element).append(c);
-                    var c2 = $("<ul/>");
-                    c.append(c2);
-                    var cl = data[i];
-                    c2.append($("<li/>").text("from: "+cl.from));
-                    c2.append($("<li/>").text("since: "+cl.connected));
-                    c2.append($("<li/>").text("messages received: "+cl.rx));
-                    c2.append($("<li/>").text("messages sent: "+cl.tx));
-                    c2.append($("<li/>").text("subscribing to: "+cl.subscriptions));
-                };
-            }
-           });
+    doAPI(method, {}, function(data)
+          {
+              $(element).empty();
+              for (var i=0; i <data.length; i++) {
+                  var c = $("<li/>").text("client "+i);
+                  $(element).append(c);
+                  var c2 = $("<ul/>");
+                  c.append(c2);
+                  var cl = data[i];
+                  c2.append($("<li/>").text("from: "+cl.from));
+                  c2.append($("<li/>").text("since: "+cl.connected));
+                  c2.append($("<li/>").text("messages received: "+cl.rx));
+                  c2.append($("<li/>").text("messages sent: "+cl.tx));
+                  c2.append($("<li/>").text("subscribing to: "+cl.subscriptions));
+              };
+          });
 };
 
 
