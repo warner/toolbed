@@ -5,7 +5,8 @@ CREATE TABLE `version`
 
 CREATE TABLE `node` -- contains one row
 (
- `webport` STRING
+ `webport` STRING,
+ `relay_location` STRING
 );
 
 CREATE TABLE `services`

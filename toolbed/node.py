@@ -46,8 +46,11 @@ class Node(service.MultiService):
         self.db.commit()
 
     def init_client(self):
-        pass
+        from . import client
+        self.client = client.Client(self.db)
+        self.client.setServiceParent(self)
 
     def init_relay(self):
         from . import relay
-        relay.RelayService(self.db).setServiceParent(self)
+        self.relay = relay.RelayService(self.db)
+        self.relay.setServiceParent(self)
