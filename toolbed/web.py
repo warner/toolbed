@@ -52,7 +52,13 @@ class API(resource.Resource):
         c = self.db.cursor()
         data = "unknown query"
         if r["what"] == "webport":
-            c.execute("SELECT webport FROM node")
+            c.execute("SELECT `webport` FROM `node`")
+            data = str(c.fetchone()[0])
+        if r["what"] == "relay_location":
+            c.execute("SELECT `relay_location` FROM `client_config`")
+            data = str(c.fetchone()[0])
+        if r["what"] == "pubkey":
+            c.execute("SELECT `pubkey` FROM `client_config`")
             data = str(c.fetchone()[0])
         return json.dumps({"text": data})
 

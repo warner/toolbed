@@ -17,9 +17,9 @@ $(function() {
       $("#tabs").tabs({selected: -1});
       $("#tabs").bind('tabsshow', function(event, ui)
                       {
-                          //alert(ui.index);
-                          //$("#webport").text("fetching..");
                           fill("webport", "#webport");
+                          fill("relay_location", "#relay_location");
+                          fill("pubkey", "#pubkey");
                           return true;
                           });
 });
