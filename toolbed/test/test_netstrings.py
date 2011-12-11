@@ -1,6 +1,6 @@
 import unittest
 
-from ..relay import make_netstring, split_netstrings
+from ..netstring import make_netstring, split_netstrings
 
 class Netstring(unittest.TestCase):
     def test_create(self):
