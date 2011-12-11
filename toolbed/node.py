@@ -8,7 +8,7 @@ class Node(service.MultiService):
         self.dbfile = dbfile
 
         self.sqlite, self.db = database.get_db(dbfile)
-        self.init_webport()
+        self.client = self.relay = None
         c = self.db.cursor()
         c.execute("SELECT name FROM services")
         for (name,) in c.fetchall():
@@ -19,6 +19,7 @@ class Node(service.MultiService):
                 self.init_relay()
             else:
                 raise ValueError("Unknown service '%s'" % name)
+        self.init_webport()
 
     def startService(self):
         print "NODE STARTED"

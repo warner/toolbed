@@ -12,6 +12,14 @@ def read_media(fn):
     f.close()
     return data
 
+class Relay(resource.Resource):
+    def __init__(self, relay):
+        resource.Resource.__init__(self)
+        self.relay = relay
+    def render_GET(self, request):
+        request.setHeader("content-type", "text/html")
+        return read_media("relay.html")
+
 class API(resource.Resource):
     def __init__(self, tokens, db):
         resource.Resource.__init__(self)
@@ -82,6 +90,8 @@ class WebPort(service.MultiService):
 
         webport = str(node.get_node_config("webport"))
         root = Root(db)
+        if node.relay:
+            root.putChild("relay", Relay(node.relay))
         site = server.Site(root)
         s = strports.service(webport, site)
         s.setServiceParent(self)

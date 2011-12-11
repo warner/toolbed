@@ -20,7 +20,12 @@ def open_control_panel(so, out, err):
     URL = "http://localhost:%d/" % portnum
     webwait.wait(URL)
     print "Node appears to be running, opening browser"
-    n = nonce.make_nonce()
-    c.execute("INSERT INTO webui_initial_nonces VALUES (?)", (n,))
-    db.commit()
-    webbrowser.open(URL+"control?nonce=%s" % n)
+    c.execute("SELECT name FROM services")
+    services = set([str(row[0]) for row in c.fetchall()])
+    if "relay" in services:
+        webbrowser.open(URL+"relay")
+    else:
+        n = nonce.make_nonce()
+        c.execute("INSERT INTO webui_initial_nonces VALUES (?)", (n,))
+        db.commit()
+        webbrowser.open(URL+"control?nonce=%s" % n)

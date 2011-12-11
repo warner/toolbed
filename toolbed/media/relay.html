@@ -1,0 +1,33 @@
+<html>
+<head>
+ <link rel="stylesheet" href="/media/tool.css" type="text/css" />
+ <link rel="stylesheet" href="/media/css/ui-lightness/jquery-ui-1.8.16.custom.css" type="text/css" />
+ <script type="text/javascript" src="/media/jquery-1.7.1.min.js"></script>
+ <script type="text/javascript" src="/media/jquery-ui-1.8.16.custom.min.js"></script>
+ <script type="text/javascript" src="/media/relay.js"></script>
+</head>
+
+<body>
+ <h1>Relay Status Panel</h1>
+
+ <form class="reload-form" action="relay" method="GET">
+  <input type="submit" value="Reload" name="submit">
+ </form>
+
+<div id="tabs">
+  <ul>
+    <li><a href="#tabs-relay-information">Relay Information</a></li>
+    <li><a href="#tabs-clients">Clients</a></li>
+  </ul>
+  <div id="tabs-relay-information">
+    <ul>
+      <li>Web Port: <span class="fixed" id="webport">?</span></li>
+      <li>Relay Port: <span class="fixed" id="relayport">?</span></li>
+    </ul>
+  </div>
+  <div id="tabs-clients">Phasellus mattis tincidunt nibh. Cras orci urna, blandit id, pretium vel, aliquet ornare, felis. Maecenas scelerisque sem non nisl. Fusce sed lorem in enim dictum bibendum.</div>
+</div>
+
+
+</body>
+</html>
