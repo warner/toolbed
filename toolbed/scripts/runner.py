@@ -6,6 +6,8 @@
 import os, sys
 
 try:
+    # do not import anything from Twisted that requires the reactor, to allow
+    # 'tool start' to choose a reactor itself
     from twisted.python import usage
 except ImportError:
     print >>sys.stderr, "Unable to import Twisted."
@@ -62,23 +64,23 @@ class Options(usage.Options):
             raise usage.UsageError("must specify a command")
 
 def create_node(*args):
-    from .scripts.create_node import create_node
+    from .create_node import create_node
     return create_node(*args)
 
 def start(*args):
-    from .scripts.startstop import start
+    from .startstop import start
     return start(*args)
 
 def stop(*args):
-    from .scripts.startstop import stop
+    from .startstop import stop
     return stop(*args)
 
 def restart(*args):
-    from .scripts.startstop import restart
+    from .startstop import restart
     return restart(*args)
 
 def open_control_panel(*args):
-    from .scripts.open import open_control_panel
+    from .open import open_control_panel
     return open_control_panel(*args)
 
 DISPATCH = {"create-node": create_node,
