@@ -57,3 +57,4 @@ class RelayService(service.MultiService, ServerFactory):
             for p in self.subscriptions[address].keys():
                 p.sendString(msg)
                 self.clients[p]["tx"] += 1
+        print self.clients.values()
