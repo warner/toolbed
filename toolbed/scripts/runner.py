@@ -25,6 +25,9 @@ class BasedirArgument:
 
 class StartArguments(BasedirArgument):
     def parseArgs(self, basedir=None, *twistd_args):
+        # this can't handle e.g. 'tool start --nodaemon', since then
+        # --nodaemon looks like a basedir. Consider using (self, *all_args)
+        # and searching for "--" to indicate the start of the twistd_args
         self.twistd_args = twistd_args
         BasedirArgument.parseArgs(self, basedir)
 
