@@ -1,14 +1,24 @@
-CREATE TABLE version
+CREATE TABLE `version`
 (
- version INTEGER -- contains one row, set to 1
+ `version` INTEGER -- contains one row, set to 1
 );
 
-CREATE TABLE node -- contains one row
+CREATE TABLE `node` -- contains one row
 (
- webport STRING
+ `webport` STRING
 );
 
-CREATE TABLE webui_initial_nonces
+CREATE TABLE `services`
 (
- nonce STRING
+ `name` STRING
+);
+
+CREATE TABLE `webui_initial_nonces`
+(
+ `nonce` STRING
+);
+
+CREATE TABLE `relay_config` -- contains one row
+(
+ `relayport` STRING
 );

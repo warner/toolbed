@@ -36,6 +36,12 @@ class CreateNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
         ("webport", "p", "tcp:5775:interface=127.0.0.1",
          "TCP port for the node's HTTP interface."),
         ]
+class CreateRelayOptions(BasedirArgument, usage.Options):
+    optParameters = [
+        ("basedir","d",os.path.expanduser("~/.toolbed-relay"),"Base directory"),
+        ("relayport", "p", "tcp:5773", "TCP port for the relay."),
+        ("webport","p", "tcp:5774", "TCP port for the relay's HTTP interface."),
+        ]
 
 class StartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):
     optFlags = [
@@ -56,6 +62,8 @@ class Options(usage.Options):
                    ("stop", None, StopNodeOptions, "Stop a node"),
                    ("restart", None, RestartNodeOptions, "Restart a node"),
                    ("open", None, OpenOptions, "Open web control panel"),
+
+                   ("create-relay", None, CreateRelayOptions, "Create a relay"),
                    ]
 
     def getUsage(self, **kwargs):
@@ -86,11 +94,17 @@ def open_control_panel(*args):
     from .open import open_control_panel
     return open_control_panel(*args)
 
+
+def create_relay(*args):
+    from .create_node import create_relay
+    return create_relay(*args)
+
 DISPATCH = {"create-node": create_node,
             "start": start,
             "stop": stop,
             "restart": restart,
             "open": open_control_panel,
+            "create-relay": create_relay,
             }
 
 def run(args, stdout, stderr):

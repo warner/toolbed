@@ -9,6 +9,16 @@ class Node(service.MultiService):
 
         self.sqlite, self.db = database.get_db(dbfile)
         self.init_webport()
+        c = self.db.cursor()
+        c.execute("SELECT name FROM services")
+        for (name,) in c.fetchall():
+            name = str(name)
+            if name == "client":
+                self.init_client()
+            elif name == "relay":
+                self.init_relay()
+            else:
+                raise ValueError("Unknown service '%s'" % name)
 
     def startService(self):
         print "NODE STARTED"
@@ -35,3 +45,9 @@ class Node(service.MultiService):
         c.execute("DELETE FROM webui_initial_nonces")
         self.db.commit()
 
+    def init_client(self):
+        pass
+
+    def init_relay(self):
+        from . import relay
+        relay.RelayService(self.db).setServiceParent(self)
