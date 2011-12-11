@@ -55,6 +55,18 @@ class RestartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):
 class OpenOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     pass
 
+class TestOptions(usage.Options):
+    def parseArgs(self, *test_args):
+        if not test_args:
+            vmaj,vmin = sys.version_info[0:2]
+            if vmaj == 2 and vmin < 7:
+                print "Sorry, test-discovery requires py2.7"
+                print "Try ./tool test toolbed.test.test_netstrings"
+                sys.exit(1)
+            self.test_args = ["discover", "-v"] # require unittest from py2.7
+        else:
+            self.test_args = ["-v"] + list(test_args)
+
 class Options(usage.Options):
     synopsis = "\nUsage: tool <command>"
     subCommands = [("create-node", None, CreateNodeOptions, "Create a node"),
@@ -64,6 +76,7 @@ class Options(usage.Options):
                    ("open", None, OpenOptions, "Open web control panel"),
 
                    ("create-relay", None, CreateRelayOptions, "Create a relay"),
+                   ("test", None, TestOptions, "Run unit tests"),
                    ]
 
     def getUsage(self, **kwargs):
@@ -99,12 +112,20 @@ def create_relay(*args):
     from .create_node import create_relay
     return create_relay(*args)
 
+def test(so, stdout, stderr):
+    import unittest
+    args = ["python -m unittest"] + list(so.test_args)
+    unittest.main(module=None, argv=args)
+    #unittest.main(module="toolbed.test.test_netstrings", argv=args)
+    sys.exit(0) # just in case
+
 DISPATCH = {"create-node": create_node,
             "start": start,
             "stop": stop,
             "restart": restart,
             "open": open_control_panel,
             "create-relay": create_relay,
+            "test": test,
             }
 
 def run(args, stdout, stderr):
