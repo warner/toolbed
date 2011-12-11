@@ -44,6 +44,19 @@ class RelayService(service.MultiService, ServerFactory):
                            "subscriptions": set()}
         return p
 
+    def get_clients_jsonable(self):
+        data = []
+        for c in self.clients.values():
+            r = {}
+            for k,v in c.items():
+                if k == "from":
+                    v = str(v)
+                if k == "subscriptions":
+                    v = list(v)
+                r[k] = v
+            data.append(r)
+        return data
+
     def client_message(self, p, messages):
         self.clients[p]["rx"] += 1
         command = messages[0]

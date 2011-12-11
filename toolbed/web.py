@@ -12,10 +12,29 @@ def read_media(fn):
     f.close()
     return data
 
-class Relay(resource.Resource):
-    def __init__(self, relay):
+class RelayAPI(resource.Resource):
+    def __init__(self, db, relay):
         resource.Resource.__init__(self)
+        self.db = db
         self.relay = relay
+    def render_POST(self, request):
+        r = json.loads(request.content.read())
+        c = self.db.cursor()
+        data = None
+        text = "unknown query"
+        if r["what"] == "webport":
+            c.execute("SELECT `webport` FROM `node`")
+            text = str(c.fetchone()[0])
+        if r["what"] == "relayport":
+            c.execute("SELECT `relayport` FROM `relay_config`")
+            text = str(c.fetchone()[0])
+        if r["what"] == "clients":
+            data = self.relay.get_clients_jsonable()
+        if data is not None:
+            return json.dumps(data)
+        return json.dumps({"text": text})
+
+class Relay(resource.Resource):
     def render_GET(self, request):
         request.setHeader("content-type", "text/html")
         return read_media("relay.html")
@@ -91,7 +110,10 @@ class WebPort(service.MultiService):
         webport = str(node.get_node_config("webport"))
         root = Root(db)
         if node.relay:
-            root.putChild("relay", Relay(node.relay))
+            r = Relay()
+            rapi = RelayAPI(self.db, node.relay)
+            r.putChild("api", rapi)
+            root.putChild("relay", r)
         site = server.Site(root)
         s = strports.service(webport, site)
         s.setServiceParent(self)
