@@ -4,3 +4,7 @@
  top: 20px;
  position: absolute;
 }
+
+.fixed {
+ font-family: fixed;
+}
