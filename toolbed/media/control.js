@@ -66,6 +66,7 @@ function startInvitation(event) {
     doAPI("startInvitation", {});
     $("#invite").slideUp(500);
     $("#invite-prepare-invitation").slideDown(500);
+    $("#invite-to").focus(); // TODO: make 'return' trigger the button
 };
 
 function sendInvitation(event) {
