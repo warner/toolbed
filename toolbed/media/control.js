@@ -95,6 +95,8 @@ function sendInvitation(event) {
 function acceptInvitation(event) {
     var args = { name: $("#invite-from").val(),
                  code: $("#invite-code").val() };
+    $("#invite-from").val("");
+    $("#invite-code").val("");
     doAPI("acceptInvitation", args,
           function () {
               $("#tabs").tabs("select", 1);
