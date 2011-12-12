@@ -14,24 +14,29 @@ function fill(method, element) {
     doAPI(method, {}, function(data) { $(element).text(data.text); });
 };
 
+function client_row(cl) {
+    var row = d3.select(this).append("ul");
+    row.append("li").text("from: "+cl.from);
+    row.append("li").text("since: "+cl.connected);
+    row.append("li").text("messages received: "+cl.rx);
+    row.append("li").text("messages sent: "+cl.tx);
+    row.append("li").text("subscribing to: "+cl.subscriptions);
+};
+
 function fill_clients(method, element) {
-    $(element).empty();
-    $(element).append($("<li/>").text("updating.."));
+    var root = $(element);
+    root.empty();
+    root.append($("<li/>").text("updating.."));
     doAPI(method, {}, function(data)
           {
-              $(element).empty();
-              for (var i=0; i <data.length; i++) {
-                  var c = $("<li/>").text("client "+i);
-                  $(element).append(c);
-                  var c2 = $("<ul/>");
-                  c.append(c2);
-                  var cl = data[i];
-                  c2.append($("<li/>").text("from: "+cl.from));
-                  c2.append($("<li/>").text("since: "+cl.connected));
-                  c2.append($("<li/>").text("messages received: "+cl.rx));
-                  c2.append($("<li/>").text("messages sent: "+cl.tx));
-                  c2.append($("<li/>").text("subscribing to: "+cl.subscriptions));
-              };
+              root.empty();
+              var l = d3.select("#clients");
+              var rows = l.selectAll("li").data(data);
+              rows.exit().remove();
+              var newrows = rows.enter().append("li")
+                  .text(function(d,i) {return "client "+i;})
+                  .attr("class", "clients");
+              newrows.each(client_row);
           });
 };
 
