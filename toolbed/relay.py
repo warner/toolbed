@@ -68,6 +68,6 @@ class RelayService(service.MultiService, ServerFactory):
             address = messages[1]
             msg = messages[2]
             for p in self.subscriptions[address].keys():
-                p.sendString(msg)
+                p.sendString("".join([make_netstring(m) for m in messages]))
                 self.clients[p]["tx"] += 1
         print self.clients.values()

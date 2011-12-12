@@ -13,6 +13,7 @@ class Connection(basic.NetstringReceiver):
         except ValueError:
             log.msg("malformed netstring received")
             self.transport.loseConnection()
+            return
         self.factory.message_received(self, messages)
 
 class Client(service.MultiService, protocol.ClientFactory):
@@ -30,8 +31,8 @@ class Client(service.MultiService, protocol.ClientFactory):
         self.pending_messages = collections.deque()
 
         c.execute("SELECT `pubkey` FROM `client_config`");
-        self.sk_s = str(c.fetchone()[0])
-        self.send_message_to_relay("subscribe", self.sk_s)
+        self.vk_s = str(c.fetchone()[0])
+        self.send_message_to_relay("subscribe", self.vk_s)
 
 
     def maybe_send_messages(self):
@@ -57,8 +58,13 @@ class Client(service.MultiService, protocol.ClientFactory):
         self.pending_messages.append(msg)
         self.maybe_send_messages()
 
-    def message_received(self, messages):
-        print "RECEIVED", messages
+    def message_received(self, p, messages):
+        assert str(messages[0]) == "send"
+        assert str(messages[1]) == self.vk_s
+        print "MSG", str(messages[2])
 
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
+        msg_to = str(args["to"])
+        msg_body = str(args["message"])
+        self.send_message_to_relay("send", msg_to, msg_body)

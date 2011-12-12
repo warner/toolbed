@@ -19,7 +19,7 @@ function sendMessage(event) {
     var args = {to: $("#message-to").val(),
                 message: $("#message-message").val()
                };
-    doAPI("sendMessage", args, function(){alert("Sent!")});
+    doAPI("sendMessage", args, function(){alert("Sent!");});
 };
 
 $(function() {
