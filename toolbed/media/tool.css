@@ -5,6 +5,14 @@
  position: absolute;
 }
 
+.small {
+    font-size: 50%;
+}
+
 .fixed {
  font-family: "Courier New",Courier,monospace;
+}
+
+.hidden {
+    display: none;
 }

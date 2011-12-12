@@ -22,6 +22,20 @@ function sendMessage(event) {
     doAPI("sendMessage", args, function(){alert("Sent!");});
 };
 
+function startInvitation(event) {
+    doAPI("startInvitation", {});
+    $("#invite").slideUp(500);
+    $("#invite-prepare-invitation").slideDown(500);
+};
+
+function sendInvitation(event) {
+    var args = { name: $("#invite-to").val() };
+    doAPI("sendInvitation", args);
+    $("#pending-invitations").slideDown();
+    $("#invite-prepare-invitation").slideUp();
+    setTimeout(function() { $("#invite").slideDown("slow"); }, 5000);
+};
+
 $(function() {
       $("#tabs").tabs({selected: -1,
                        show: function(event, ui)
@@ -31,8 +45,18 @@ $(function() {
                                fill("relay_location", "#relay_location");
                                fill("pubkey", "#pubkey");
                            }
+                           else if (ui.index == 1) {
+                               fill("count-pending-invitations",
+                                    "#count-pending-invitations");
+                           }
                            return true;
                        }
                        });
       $("#send-message").on("click", sendMessage);
+      $("#invite input").on("click", startInvitation);
+      $("#invite-cancel").on("click", function () {
+                                 $("#invite").slideDown(500);
+                                 $("#invite-prepare-invitation").slideUp(500);
+                                 });
+      $("#send-invitation").on("click", sendInvitation);
 });

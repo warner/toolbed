@@ -54,21 +54,31 @@ class API(resource.Resource):
             return "Invalid token"
         method = str(r["method"])
         c = self.db.cursor()
-        data = "unknown query"
+        data = None
+        text = "unknown query"
         if method == "webport":
             c.execute("SELECT `webport` FROM `node`")
-            data = str(c.fetchone()[0])
+            text = c.fetchone()[0]
         elif method == "relay_location":
             c.execute("SELECT `relay_location` FROM `client_config`")
-            data = str(c.fetchone()[0])
+            text = c.fetchone()[0]
         elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
-            data = str(c.fetchone()[0])
+            text = c.fetchone()[0]
+        elif method == "count-pending-invitations":
+            import random
+            text = random.randint(0,10)
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
+        elif method == "startInvitation":
+            self.client.control_startInvitation(r["args"])
+        elif method == "sendInvitation":
+            self.client.control_sendInvitation(r["args"])
         else:
             raise ValueError("Unknown method '%s'" % method)
-        return json.dumps({"text": data})
+        if data is not None:
+            return json.dumps(data)
+        return json.dumps({"text": str(text)})
 
 class Control(resource.Resource):
     def __init__(self, db):

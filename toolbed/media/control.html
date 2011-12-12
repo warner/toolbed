@@ -22,8 +22,8 @@
 <div id="tabs">
   <ul>
     <li><a href="#tabs-node-control">Node Control</a></li>
+    <li><a href="#tabs-address-book">Address Book</a></li>
     <li><a href="#tabs-invitations">Invitations</a></li>
-    <li><a href="#tabs-buddy-list">Buddy List</a></li>
   </ul>
   <div id="tabs-node-control">
     <ul>
@@ -31,9 +31,6 @@
       <li>Relay Location: <span class="fixed" id="relay_location">?</span></li>
       <li>Client Pubkey: <span class="fixed" id="pubkey">?</span></li>
     </ul>
-  </div>
-  <div id="tabs-invitations">
-    <div>Pending Invitations: <ul id="pending-invitations"></ul></div>
     <div>Send Message:
       <ul>
         <li>To: <input id="message-to" type="text" name="address"/></li>
@@ -42,7 +39,30 @@
       </ul>
     </div>
   </div>
-  <div id="tabs-buddy-list">Nam dui erat, auctor a, dignissim quis, sollicitudin eu, felis. Pellentesque nisi urna, interdum eget, sagittis et, consequat vestibulum, lacus. Mauris porttitor ullamcorper augue.</div>
+  <div id="tabs-address-book">
+    <div id="pending-invitations" class="hidden">
+      <h3><a href="#">Pending Invitations
+                      (<span id="count-pending-invitations">?</span>)</a></h3>
+      <ul></ul>
+    </div>
+    <h3 id="invite"><input type="submit" value="Invite a Friend"/></h3>
+    <div id="invite-prepare-invitation" class="hidden">
+      <p>prepare to invite someone here</p>
+        <ul>
+          <li>Name: <input id="invite-to" type="text"/>
+          <input id="send-invitation"  type="submit" value="Send!"/>
+          <a id="invite-cancel" class="small" href="#">cancel</a>
+          </li>
+        </ul>
+    </div>
+    <h3>Address Book</h3>
+    <ul>
+      <li>...</li>
+    </ul>
+  </div>
+  <div id="tabs-invitations">
+    <p>stuff</p>
+  </div>
 </div>
 
 

@@ -68,3 +68,10 @@ class Client(service.MultiService, protocol.ClientFactory):
         msg_to = str(args["to"])
         msg_body = str(args["message"])
         self.send_message_to_relay("send", msg_to, msg_body)
+
+    def control_startInvitation(self, args):
+        print "startInvitation"
+
+    def control_sendInvitation(self, args):
+        petname = str(args["name"])
+        print "sendInvitation", petname
