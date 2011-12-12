@@ -1,12 +1,10 @@
-
-import time
 import collections
 from twisted.application import service
 from twisted.python import log
 from twisted.internet import protocol, endpoints, reactor
 from twisted.protocols import basic
-from ed25519 import create_keypair
 from .netstring import make_netstring, split_netstrings
+from . import invitation
 
 class Connection(basic.NetstringReceiver):
     def stringReceived(self, msg):
@@ -62,8 +60,14 @@ class Client(service.MultiService, protocol.ClientFactory):
 
     def message_received(self, p, messages):
         assert str(messages[0]) == "send"
-        assert str(messages[1]) == self.vk_s
+        to = str(messages[1])
+        #assert to == self.vk_s
         print "MSG", str(messages[2])
+
+        for i in (self.current_outbound_invitations
+                  + self.current_inbound_invitations):
+            if to == i.get_my_address():
+                i.rx_message(*messages[2:])
 
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
@@ -75,37 +79,58 @@ class Client(service.MultiService, protocol.ClientFactory):
         print "startInvitation"
 
     def control_sendInvitation(self, args):
-        sent = time.time()
-        expires = sent + 60
         petname = str(args["name"])
-        isk,ivk = create_keypair()
-        private_code = isk.to_ascii(prefix="is0", encoding="base32")
-        code = ivk.to_ascii(prefix="i0", encoding="base32")
+        # in the medium-size code protocol, the invitation code I is just a
+        # random string.
         print "sendInvitation", petname
+        BALICE = "balice" # this is what the recipient gets
+        invitation.create_outbound(petname, self, BALICE)
+        self.subscribe_to_all_pending_invitations()
+        # when this XHR returns, the JS client will fetch the pending
+        # invitation list and show the most recent entry
+
+    def current_outbound_invitations(self):
         c = self.db.cursor()
-        c.execute("INSERT INTO `pending_invitations` VALUES (?,?,?,?,?)",
-                  (sent, expires, petname, private_code, code))
-        self.db.commit()
+        c.execute("SELECT `code` FROM `outbound_invitations`")
+        return [invitation.OutboundInvitation(self,row)
+                for row in c.fetchall()]
+
+    def current_inbound_invitations(self):
+        c = self.db.cursor()
+        c.execute("SELECT `code` FROM `inbound_invitations`")
+        return [invitation.InboundInvitation(self,row,None)
+                for row in c.fetchall()]
+
+
+    def subscribe_to_all_pending_invitations(self):
+        for i in self.current_outbound_invitations():
+            self.send_message_to_relay("subscribe", i.get_my_address())
+        for i in self.current_inbound_invitations():
+            self.send_message_to_relay("subscribe", i.get_my_address())
+        # TODO: when called by startInvitation, it'd be nice to sync here: be
+        # certain that the relay server has received our subscription
+        # request, before returning to startInvitation and allowing the user
+        # to send the invite code. If they stall for some reason, we might
+        # miss the response.
 
     def control_cancelInvitation(self, invite):
         print "cancelInvitation", invite
         c = self.db.cursor()
-        c.execute("DELETE FROM `pending_invitations`"
+        c.execute("DELETE FROM `outbound_invitations`"
                   " WHERE `petname`=? AND `code`=?",
                   (str(invite["petname"]), str(invite["code"])))
         self.db.commit()
 
     def control_acceptInvitation(self, invite):
         print "acceptInvitation", invite["name"], invite["code"]
+        ABOB = "abob" # this is what the sender gets
+        invitation.accept_invitation(invite["name"], invite["code"], ABOB, self)
 
-    def control_getPendingInvitationsJSONable(self):
-        c = self.db.cursor()
-        c.execute("SELECT `sent`,`expires`,`petname`,`code`"
-                  " FROM `pending_invitations`"
-                  " ORDER BY `sent` DESC")
-        data = [{ "sent": float(row[0]),
-                  "expires": float(row[1]),
-                  "petname": str(row[2]),
-                  "code": str(row[3]),
-                  } for row in c.fetchall()]
+    def control_getOutboundInvitationsJSONable(self):
+        data = [{ "sent": i.sent,
+                  "expires": i.expires,
+                  "petname": i.petname,
+                  "code": i.code,
+                  "stage": i.stage,
+                  } for i in self.current_outbound_invitations()]
         return data
