@@ -55,7 +55,9 @@ class RestartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):
     def postOptions(self):
         self["no-open"] = False
 class OpenOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
-    pass
+    optFlags = [
+        ("no-open", "n", "Don't open webbrowser, just show URL"),
+        ]
 
 class TestOptions(usage.Options):
     def parseArgs(self, *test_args):
