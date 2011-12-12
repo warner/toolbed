@@ -29,3 +29,10 @@ CREATE TABLE `client_config` -- contains one row
  `pubkey` STRING,
  `relay_location` STRING
 );
+
+CREATE TABLE `pending_invitations`
+(
+ `sent` INTEGER, -- seconds-since-epoch from the "send" button being pressed
+ `expires` INTEGER, -- when the invitation expires
+ `petname` STRING
+);

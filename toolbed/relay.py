@@ -66,7 +66,6 @@ class RelayService(service.MultiService, ServerFactory):
             self.clients[p]["subscriptions"].add(address)
         elif command == "send":
             address = messages[1]
-            msg = messages[2]
             for p in self.subscriptions[address].keys():
                 p.sendString("".join([make_netstring(m) for m in messages]))
                 self.clients[p]["tx"] += 1

@@ -66,8 +66,7 @@ class API(resource.Resource):
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
         elif method == "getPendingInvitations":
-            import random
-            data = [{"name":"fake"} for i in range(random.randint(0,10))]
+            data = self.client.control_getPendingInvitationsJSONable()
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
         elif method == "startInvitation":

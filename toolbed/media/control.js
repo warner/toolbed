@@ -30,12 +30,13 @@ function getPendingInvitations() {
     doAPI("getPendingInvitations", {},
           function (data) {
               $("#count-pending-invitations").text(data.length);
+              $("#pending-invitations ul").empty();
               var l = d3.select("#pending-invitations ul");
               var rows = l.selectAll("li").data(data);
-              rows.exit().remove();
               rows.enter().append("li")
-                  .text(function(d,i){return d.name;});
+                  .text(function(d,i){return d.petname+" (sent "+d.sent+")";});
               });
+              rows.exit().remove();
 };
 
 function startInvitation(event) {
@@ -46,7 +47,7 @@ function startInvitation(event) {
 
 function sendInvitation(event) {
     var args = { name: $("#invite-to").val() };
-    doAPI("sendInvitation", args);
+    doAPI("sendInvitation", args, getPendingInvitations);
     $("#pending-invitations").slideDown();
     $("#invite-prepare-invitation").slideUp();
     setTimeout(function() { $("#invite").slideDown("slow"); }, 5000);

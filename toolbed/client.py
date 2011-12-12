@@ -1,4 +1,5 @@
 
+import time
 import collections
 from twisted.application import service
 from twisted.python import log
@@ -73,5 +74,21 @@ class Client(service.MultiService, protocol.ClientFactory):
         print "startInvitation"
 
     def control_sendInvitation(self, args):
+        sent = time.time()
+        expires = sent + 60
         petname = str(args["name"])
         print "sendInvitation", petname
+        c = self.db.cursor()
+        c.execute("INSERT INTO `pending_invitations` VALUES (?,?,?)",
+                  (sent, expires, petname))
+        self.db.commit()
+
+    def control_getPendingInvitationsJSONable(self):
+        c = self.db.cursor()
+        c.execute("SELECT `sent`,`expires`,`petname`"
+                  " FROM `pending_invitations`"
+                  " ORDER BY `sent` DESC")
+        data = [{"sent": float(row[0]),
+                 "expires": float(row[1]),
+                 "petname": str(row[2])} for row in c.fetchall()]
+        return data
