@@ -87,6 +87,14 @@ class Client(service.MultiService, protocol.ClientFactory):
                   (sent, expires, petname, private_code, code))
         self.db.commit()
 
+    def control_cancelInvitation(self, invite):
+        print "cancelInvitation", invite
+        c = self.db.cursor()
+        c.execute("DELETE FROM `pending_invitations`"
+                  " WHERE `petname`=? AND `code`=?",
+                  (str(invite["petname"]), str(invite["code"])))
+        self.db.commit()
+
     def control_getPendingInvitationsJSONable(self):
         c = self.db.cursor()
         c.execute("SELECT `sent`,`expires`,`petname`,`code`"

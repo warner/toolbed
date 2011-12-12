@@ -26,6 +26,10 @@ function togglePendingInvitations() {
     $("#pending-invitations").slideToggle();
 };
 
+function cancelInvitation(invite) {
+    doAPI("cancelInvitation", invite, getPendingInvitations);
+};
+
 function getPendingInvitations() {
     doAPI("getPendingInvitations", {},
           function (data) {
@@ -52,6 +56,14 @@ function getPendingInvitations() {
                   details.append($('<li/>').text("Invitation Code: "+d.code));
                   details.append($('<li/>').text("Sent: "+d.sent));
                   details.append($('<li/>').text("Expires: "+d.expires));
+                  details.append($('<li/>')
+                                 .html('<a href="#">cancel</a>')
+                                 .find("a")
+                                 .data("invite", d)
+                                 .on("click",
+                                     function() {var d = $(this).data("invite");
+                                                 cancelInvitation(d);})
+                                 );
               }
               if (data.length) {
                   $("#toggle-pending-invitations").slideDown();
