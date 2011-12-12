@@ -30,13 +30,36 @@ function getPendingInvitations() {
     doAPI("getPendingInvitations", {},
           function (data) {
               $("#count-pending-invitations").text(data.length);
-              $("#pending-invitations ul").empty();
-              var l = d3.select("#pending-invitations ul");
-              var rows = l.selectAll("li").data(data);
-              rows.enter().append("li")
-                  .text(function(d,i){return d.petname+" (sent "+d.sent+")";});
-              });
-              rows.exit().remove();
+              var pending = $("#pending-invitations ul");
+              pending.empty();
+              for (var i=0; i<data.length; i++) {
+                  var d = data[i];
+                  var h = $('<li><a href="#"></a></li>')
+                      .appendTo(pending)
+                  ;
+                  h.find("a")
+                      .text(d.petname)
+                      .data("invite-number", i)
+                      .on("click",
+                          function() {var i = $(this).data("invite-number");
+                                      $("#pending-invite-"+i).slideToggle();})
+                  ;
+                  var details = $('<ul/>')
+                      .appendTo(h)
+                      .hide()
+                      .attr("id", "pending-invite-"+i)
+                  ;
+                  details.append($('<li/>').text("Invitation Code: "+d.code));
+                  details.append($('<li/>').text("Sent: "+d.sent));
+                  details.append($('<li/>').text("Expires: "+d.expires));
+              }
+              if (data.length) {
+                  $("#toggle-pending-invitations").slideDown();
+                  $("#pending-invite-0").show();
+              } else {
+                  $("#toggle-pending-invitations").slideUp();
+              }
+          });
 };
 
 function startInvitation(event) {
@@ -49,6 +72,7 @@ function sendInvitation(event) {
     var args = { name: $("#invite-to").val() };
     doAPI("sendInvitation", args, getPendingInvitations);
     $("#pending-invitations").slideDown();
+    $("#pending-invite-0").slideDown();
     $("#invite-prepare-invitation").slideUp();
     setTimeout(function() { $("#invite").slideDown("slow"); }, 5000);
 };
@@ -69,11 +93,12 @@ $(function() {
                        }
                        });
       $("#send-message").on("click", sendMessage);
+
+      $("#toggle-pending-invitations").on("click", togglePendingInvitations);
       $("#invite input").on("click", startInvitation);
       $("#invite-cancel").on("click", function () {
                                  $("#invite").slideDown(500);
                                  $("#invite-prepare-invitation").slideUp(500);
                                  });
       $("#send-invitation").on("click", sendInvitation);
-      $("#toggle-pending-invitations").on("click", togglePendingInvitations);
 });
