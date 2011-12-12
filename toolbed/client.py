@@ -64,8 +64,8 @@ class Client(service.MultiService, protocol.ClientFactory):
         #assert to == self.vk_s
         print "MSG", str(messages[2])
 
-        for i in (self.current_outbound_invitations
-                  + self.current_inbound_invitations):
+        for i in (self.current_outbound_invitations()
+                  + self.current_inbound_invitations()):
             if to == i.get_my_address():
                 i.rx_message(*messages[2:])
 

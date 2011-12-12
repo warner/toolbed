@@ -57,6 +57,5 @@ CREATE TABLE `inbound_invitations`
 (
  `petname` STRING,
  `code` STRING,
- `address` STRING, -- our address
- `abob` STRING -- our addressbook entry for them
+ `address` STRING -- our address
 );

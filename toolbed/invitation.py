@@ -128,8 +128,8 @@ def accept_invitation(petname, code, abob, client):
     db = client.db
     c = db.cursor()
     c.execute("INSERT INTO `inbound_invitations`"
-              " VALUES (?,?,?,?)",
+              " VALUES (?,?,?)",
               (petname, code, receiver_address))
     db.commit()
-    i.start(client)
+    i.start()
     return i
