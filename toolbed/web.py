@@ -65,9 +65,9 @@ class API(resource.Resource):
         elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
-        elif method == "count-pending-invitations":
+        elif method == "getPendingInvitations":
             import random
-            text = random.randint(0,10)
+            data = [{"name":"fake"} for i in range(random.randint(0,10))]
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
         elif method == "startInvitation":

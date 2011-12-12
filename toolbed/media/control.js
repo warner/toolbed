@@ -22,6 +22,22 @@ function sendMessage(event) {
     doAPI("sendMessage", args, function(){alert("Sent!");});
 };
 
+function togglePendingInvitations() {
+    $("#pending-invitations").slideToggle();
+};
+
+function getPendingInvitations() {
+    doAPI("getPendingInvitations", {},
+          function (data) {
+              $("#count-pending-invitations").text(data.length);
+              var l = d3.select("#pending-invitations ul");
+              var rows = l.selectAll("li").data(data);
+              rows.exit().remove();
+              rows.enter().append("li")
+                  .text(function(d,i){return d.name;});
+              });
+};
+
 function startInvitation(event) {
     doAPI("startInvitation", {});
     $("#invite").slideUp(500);
@@ -46,8 +62,7 @@ $(function() {
                                fill("pubkey", "#pubkey");
                            }
                            else if (ui.index == 1) {
-                               fill("count-pending-invitations",
-                                    "#count-pending-invitations");
+                               getPendingInvitations();
                            }
                            return true;
                        }
@@ -59,4 +74,5 @@ $(function() {
                                  $("#invite-prepare-invitation").slideUp(500);
                                  });
       $("#send-invitation").on("click", sendInvitation);
+      $("#toggle-pending-invitations").on("click", togglePendingInvitations);
 });
