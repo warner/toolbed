@@ -95,6 +95,9 @@ class Client(service.MultiService, protocol.ClientFactory):
                   (str(invite["petname"]), str(invite["code"])))
         self.db.commit()
 
+    def control_acceptInvitation(self, invite):
+        print "acceptInvitation", invite["name"], invite["code"]
+
     def control_getPendingInvitationsJSONable(self):
         c = self.db.cursor()
         c.execute("SELECT `sent`,`expires`,`petname`,`code`"

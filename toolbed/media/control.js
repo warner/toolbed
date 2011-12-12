@@ -76,8 +76,10 @@ function getPendingInvitations() {
 
 function startInvitation(event) {
     doAPI("startInvitation", {});
-    $("#invite").slideUp(500);
-    $("#invite-prepare-invitation").slideDown(500);
+    $("#invite-prepare-invitation").slideDown(500,
+                                             function() {
+                                                 $("#invite").slideUp(500);
+                                                 });
     $("#invite-to").focus(); // TODO: make 'return' trigger the button
 };
 
@@ -88,6 +90,15 @@ function sendInvitation(event) {
     $("#pending-invite-0").slideDown();
     $("#invite-prepare-invitation").slideUp();
     setTimeout(function() { $("#invite").slideDown("slow"); }, 5000);
+};
+
+function acceptInvitation(event) {
+    var args = { name: $("#invite-from").val(),
+                 code: $("#invite-code").val() };
+    doAPI("acceptInvitation", args,
+          function () {
+              $("#tabs").tabs("select", 1);
+              });
 };
 
 $(function() {
@@ -114,4 +125,5 @@ $(function() {
                                  $("#invite-prepare-invitation").slideUp(500);
                                  });
       $("#send-invitation").on("click", sendInvitation);
+      $("#accept-invitation").on("click", acceptInvitation);
 });
