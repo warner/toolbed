@@ -34,5 +34,7 @@ CREATE TABLE `pending_invitations`
 (
  `sent` INTEGER, -- seconds-since-epoch from the "send" button being pressed
  `expires` INTEGER, -- when the invitation expires
- `petname` STRING
+ `petname` STRING,
+ `private_code` STRING,
+ `code` STRING -- invitation code (sent to recipient)
 );

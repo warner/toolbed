@@ -5,6 +5,7 @@ from twisted.application import service
 from twisted.python import log
 from twisted.internet import protocol, endpoints, reactor
 from twisted.protocols import basic
+from ed25519 import create_keypair
 from .netstring import make_netstring, split_netstrings
 
 class Connection(basic.NetstringReceiver):
@@ -77,18 +78,23 @@ class Client(service.MultiService, protocol.ClientFactory):
         sent = time.time()
         expires = sent + 60
         petname = str(args["name"])
+        isk,ivk = create_keypair()
+        private_code = isk.to_ascii(prefix="is0", encoding="base32")
+        code = ivk.to_ascii(prefix="i0", encoding="base32")
         print "sendInvitation", petname
         c = self.db.cursor()
-        c.execute("INSERT INTO `pending_invitations` VALUES (?,?,?)",
-                  (sent, expires, petname))
+        c.execute("INSERT INTO `pending_invitations` VALUES (?,?,?,?,?)",
+                  (sent, expires, petname, private_code, code))
         self.db.commit()
 
     def control_getPendingInvitationsJSONable(self):
         c = self.db.cursor()
-        c.execute("SELECT `sent`,`expires`,`petname`"
+        c.execute("SELECT `sent`,`expires`,`petname`,`code`"
                   " FROM `pending_invitations`"
                   " ORDER BY `sent` DESC")
-        data = [{"sent": float(row[0]),
-                 "expires": float(row[1]),
-                 "petname": str(row[2])} for row in c.fetchall()]
+        data = [{ "sent": float(row[0]),
+                  "expires": float(row[1]),
+                  "petname": str(row[2]),
+                  "code": str(row[3]),
+                  } for row in c.fetchall()]
         return data
