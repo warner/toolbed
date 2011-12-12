@@ -14,8 +14,8 @@ def create_node(so, stdout, stderr):
     c.execute("INSERT INTO node (webport) VALUES (?)", (so["webport"],))
     c.execute("INSERT INTO services (name) VALUES (?)", ("client",))
     sk,vk = ed25519.create_keypair()
-    sk_s = sk.to_ascii(prefix="sk0-", encoding="base32")
-    vk_s = vk.to_ascii(prefix="vk0-", encoding="base32")
+    sk_s = sk.to_ascii(prefix="sk0", encoding="base32")
+    vk_s = vk.to_ascii(prefix="vk0", encoding="base32")
     c.execute("INSERT INTO `client_config`"
               " (`privkey`, `pubkey`, `relay_location`) VALUES (?,?,?)",
               (sk_s, vk_s, so["relay"]))
