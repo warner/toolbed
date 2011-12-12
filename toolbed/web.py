@@ -65,8 +65,8 @@ class API(resource.Resource):
         elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
-        elif method == "getPendingInvitations":
-            data = self.client.control_getPendingInvitationsJSONable()
+        elif method == "getOutboundInvitations":
+            data = self.client.control_getOutboundInvitationsJSONable()
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
         elif method == "startInvitation":

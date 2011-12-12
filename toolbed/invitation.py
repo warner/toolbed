@@ -55,7 +55,7 @@ class OutboundInvitation(Common):
             # now send M2
             h,m = self.pack_messages("1", self.balice)
             self.client.send_message_to_relay("send", addr, h, m)
-            c.execute("UPDATE `pending_invitations`"
+            c.execute("UPDATE `outbound_invitations`"
                       " SET `stage`=2, `abob`=?"
                       " WHERE `petname`=? AND `code`=?",
                       (abob, self.petname, self.code))
@@ -66,7 +66,7 @@ class OutboundInvitation(Common):
             if msgnum != "2":
                 raise ValueError("unexpected message number")
             self.client.add_addressbook_entry(self.petname, self.abob)
-            c.execute("DELETE FROM `pending_invitations`"
+            c.execute("DELETE FROM `outbound_invitations`"
                       " WHERE `petname`=? and `code`=?",
                       (self.petname, self.code))
             db.commit()
@@ -80,8 +80,7 @@ def create_outbound(petname, client, balice):
                                     "", balice))
     db = client.db
     c = db.cursor()
-    c.execute("INSERT `sent`,`expires`,`petname`,`code`,`stage`,`abob`,`balice`"
-              " INTO `pending_invitations`"
+    c.execute("INSERT INTO `outbound_invitations`"
               " VALUES (?,?,?,?,?,?,?)",
               (sent, expires, petname, code, 0, "", balice))
     db.commit()
@@ -117,7 +116,7 @@ class InboundInvitation(Common):
         self.client.send_message_to_relay("send", addr, h, m)
         db = self.client.db
         c = db.cursor()
-        c.execute("DELETE FROM `pending_inbound_invitations`"
+        c.execute("DELETE FROM `inbound_invitations`"
                   " WHERE `petname`=? AND `code`=?",
                   (self.petname, self.code))
         db.commit()
@@ -128,8 +127,7 @@ def accept_invitation(petname, code, abob, client):
     i = InboundInvitation(client, (petname, code, receiver_address), abob)
     db = client.db
     c = db.cursor()
-    c.execute("INSERT `petname`,`code`,`address`"
-              " INTO `pending_inbound_invitations`"
+    c.execute("INSERT INTO `inbound_invitations`"
               " VALUES (?,?,?,?)",
               (petname, code, receiver_address))
     db.commit()

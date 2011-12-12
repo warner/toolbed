@@ -31,7 +31,7 @@ function cancelInvitation(invite) {
 };
 
 function getPendingInvitations() {
-    doAPI("getPendingInvitations", {},
+    doAPI("getOutboundInvitations", {},
           function (data) {
               $("#count-pending-invitations").text(data.length);
               var pending = $("#pending-invitations ul");

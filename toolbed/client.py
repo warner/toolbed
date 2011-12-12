@@ -91,13 +91,13 @@ class Client(service.MultiService, protocol.ClientFactory):
 
     def current_outbound_invitations(self):
         c = self.db.cursor()
-        c.execute("SELECT `code` FROM `outbound_invitations`")
+        c.execute("SELECT * FROM `outbound_invitations`")
         return [invitation.OutboundInvitation(self,row)
                 for row in c.fetchall()]
 
     def current_inbound_invitations(self):
         c = self.db.cursor()
-        c.execute("SELECT `code` FROM `inbound_invitations`")
+        c.execute("SELECT * FROM `inbound_invitations`")
         return [invitation.InboundInvitation(self,row,None)
                 for row in c.fetchall()]
 
@@ -133,4 +133,5 @@ class Client(service.MultiService, protocol.ClientFactory):
                   "code": i.code,
                   "stage": i.stage,
                   } for i in self.current_outbound_invitations()]
+        data.sort(key=lambda d: d["sent"], reverse=True)
         return data
