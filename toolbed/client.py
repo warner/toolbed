@@ -69,6 +69,13 @@ class Client(service.MultiService, protocol.ClientFactory):
             if to == i.get_my_address():
                 i.rx_message(*messages[2:])
 
+    def add_addressbook_entry(self, petname, data):
+        c = self.db.cursor()
+        c.execute("INSERT INTO `addressbook` VALUES (?,?)",
+                  (petname, data))
+        self.db.commit()
+        # TODO: notify clients to refresh
+
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
         msg_to = str(args["to"])
@@ -134,4 +141,13 @@ class Client(service.MultiService, protocol.ClientFactory):
                   "stage": i.stage,
                   } for i in self.current_outbound_invitations()]
         data.sort(key=lambda d: d["sent"], reverse=True)
+        return data
+
+    def control_getAddressBookJSONable(self):
+        c = self.db.cursor()
+        c.execute("SELECT `petname`,`key` FROM `addressbook`"
+                  " ORDER BY `petname` ASC")
+        data = [{ "petname": str(row[0]),
+                  "key": str(row[1]) }
+                for row in c.fetchall()]
         return data

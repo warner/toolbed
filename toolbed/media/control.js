@@ -22,6 +22,21 @@ function sendMessage(event) {
     doAPI("sendMessage", args, function(){alert("Sent!");});
 };
 
+function getAddressBook() {
+    doAPI("getAddressBook", {},
+          function (data) {
+              var book = $("#address-book");
+              book.empty();
+              for (var i=0; i<data.length; i++) {
+                  var d = data[i];
+                  var h = $('<li />')
+                      .text(d.petname+" ("+d.key+")")
+                      .appendTo(book);
+              }
+          });
+};
+
+
 function togglePendingInvitations() {
     $("#pending-invitations").slideToggle();
 };
@@ -114,6 +129,7 @@ $(function() {
                            }
                            else if (ui.index == 1) {
                                getPendingInvitations();
+                               getAddressBook();
                            }
                            return true;
                        }

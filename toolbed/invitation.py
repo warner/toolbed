@@ -12,7 +12,7 @@ class Common:
     def get_hmac_key(self):
         return ahash(1, self.code_binary)
     def get_sender_address(self):
-        return b2a(ahash(2, self.code_binary))
+        return "channel-"+b2a(ahash(2, self.code_binary))
 
     def pack_messages(self, *messages):
         msg = "".join([make_netstring(m) for m in messages])
@@ -48,22 +48,22 @@ class OutboundInvitation(Common):
         c = db.cursor()
         messages = self.unpack_messages(h, msg)
         if self.stage == 0:
-            # we expect M1: (0,A2,A[bob])
+            # we expect M1: (1,A2,A[bob])
             msgnum,addr,abob = messages
-            if msgnum != "0":
+            if msgnum != "1":
                 raise ValueError("unexpected message number")
-            # now send M2
-            h,m = self.pack_messages("1", self.balice)
-            self.client.send_message_to_relay("send", addr, h, m)
             c.execute("UPDATE `outbound_invitations`"
                       " SET `stage`=2, `abob`=?"
                       " WHERE `petname`=? AND `code`=?",
                       (abob, self.petname, self.code))
             db.commit()
+            # now send M2
+            h,m = self.pack_messages("2", self.balice)
+            self.client.send_message_to_relay("send", addr, h, m)
         elif self.stage == 2:
-            # we expect M3, just an ACK: (2)
+            # we expect M3, just an ACK: (3)
             msgnum, = messages
-            if msgnum != "2":
+            if msgnum != "3":
                 raise ValueError("unexpected message number")
             self.client.add_addressbook_entry(self.petname, self.abob)
             c.execute("DELETE FROM `outbound_invitations`"
@@ -96,8 +96,9 @@ class InboundInvitation(Common):
         self.abob = abob
 
     def start(self):
+        self.client.send_message_to_relay("subscribe", self.receiver_address)
         addr = self.get_sender_address()
-        h,m = self.pack_messages("0", self.receiver_address, self.abob)
+        h,m = self.pack_messages("1", self.receiver_address, self.abob)
         self.client.send_message_to_relay("send", addr, h, m)
 
     def get_my_address(self):
@@ -106,24 +107,24 @@ class InboundInvitation(Common):
     def rx_message(self, h, msg):
         messages = self.unpack_messages(h, msg)
         # We're created by M0, so we only have one stage here. We expect M2:
-        # (1,B[alice]), and respond with M3 (the ACK)
+        # (2,B[alice]), and respond with M3 (the ACK)
         msgnum,balice = messages
-        if msgnum != "1":
+        if msgnum != "2":
             raise ValueError("unexpected message number")
         self.client.add_addressbook_entry(self.petname, balice)
-        addr = self.get_sender_address()
-        h,m = self.pack_messages("2")
-        self.client.send_message_to_relay("send", addr, h, m)
         db = self.client.db
         c = db.cursor()
         c.execute("DELETE FROM `inbound_invitations`"
                   " WHERE `petname`=? AND `code`=?",
                   (self.petname, self.code))
         db.commit()
+        addr = self.get_sender_address()
+        h,m = self.pack_messages("3")
+        self.client.send_message_to_relay("send", addr, h, m)
 
 
 def accept_invitation(petname, code, abob, client):
-    receiver_address = b2a(os.urandom(256/8))
+    receiver_address = "channel-"+b2a(os.urandom(256/8))
     i = InboundInvitation(client, (petname, code, receiver_address), abob)
     db = client.db
     c = db.cursor()

@@ -3,7 +3,7 @@
 # dependency set, or parts of toolbed that require things from the dependency
 # set, until runtime, inside a command that specifically needs it.
 
-import os, sys
+import os, sys, shutil
 
 try:
     # do not import anything from Twisted that requires the reactor, to allow
@@ -118,6 +118,8 @@ def create_relay(*args):
 
 def test(so, stdout, stderr):
     import unittest
+    if os.path.exists("_test"):
+        shutil.rmtree("_test")
     args = ["python -m unittest"] + list(so.test_args)
     unittest.main(module=None, argv=args)
     #unittest.main(module="toolbed.test.test_netstrings", argv=args)

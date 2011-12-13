@@ -67,6 +67,8 @@ class API(resource.Resource):
             text = c.fetchone()[0]
         elif method == "getOutboundInvitations":
             data = self.client.control_getOutboundInvitationsJSONable()
+        elif method == "getAddressBook":
+            data = self.client.control_getAddressBookJSONable()
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
         elif method == "startInvitation":

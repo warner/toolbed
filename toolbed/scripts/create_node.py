@@ -1,9 +1,9 @@
-import os
+import os, sys
 
 import ed25519
 from .. import database
 
-def create_node(so, stdout, stderr):
+def create_node(so, stdout=sys.stdout, stderr=sys.stderr):
     basedir = so["basedir"]
     if os.path.exists(basedir):
         print >>stderr, "basedir '%s' already exists, refusing to touch it" % basedir
@@ -24,7 +24,7 @@ def create_node(so, stdout, stderr):
     return 0
 
 
-def create_relay(so, stdout, stderr):
+def create_relay(so, stdout=sys.stdout, stderr=sys.stderr):
     basedir = so["basedir"]
     if os.path.exists(basedir):
         print >>stderr, "basedir '%s' already exists, refusing to touch it" % basedir

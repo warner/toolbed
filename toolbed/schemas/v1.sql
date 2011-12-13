@@ -59,3 +59,9 @@ CREATE TABLE `inbound_invitations`
  `code` STRING,
  `address` STRING -- our address
 );
+
+CREATE TABLE `addressbook`
+(
+ `petname` STRING,
+ `key` STRING
+);
