@@ -30,7 +30,7 @@ class Outbound(unittest.TestCase):
             return now + 500
         self.failIf(i.expired(nowclock))
         self.failUnless(i.expired(futureclock))
-        self.failUnlessEqual(i.get_my_address(), "ihraxtbpsuxoohiuzjy646zkk5bh25e7gpyhwtpessv2ywn46bvq")
+        self.failUnlessEqual(i.get_my_address(), "channel-ihraxtbpsuxoohiuzjy646zkk5bh25e7gpyhwtpessv2ywn46bvq")
         self.failUnlessEqual(b2a(i.get_hmac_key()), "fvyuhvbg567wpixb5lzodtkvhpmfccwdrlp5a6zf7vvvqvlhhshq")
 
         h1,m1 = i.pack_messages("1", "hello world")
