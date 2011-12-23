@@ -33,7 +33,7 @@ class Node(service.MultiService):
 
     def set_node_config(self, name, value):
         c = self.db.cursor()
-        c.execute("UPDATE node SET ?=?", (name, value))
+        c.execute("UPDATE node SET %s=?" % name, (value,))
         self.db.commit()
 
     def init_webport(self):

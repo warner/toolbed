@@ -33,7 +33,7 @@ class StartArguments(BasedirArgument):
 
 class CreateNodeOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
     optParameters = [
-        ("webport", "p", "tcp:5775:interface=127.0.0.1",
+        ("webport", "p", "tcp:0:interface=127.0.0.1",
          "TCP port for the node's HTTP interface."),
         ("relay", "r", "tcp:host=localhost:port=5773", "Relay location"),
         ]
@@ -42,7 +42,7 @@ class CreateRelayOptions(BasedirArgument, usage.Options):
     optParameters = [
         ("basedir","d",os.path.expanduser("~/.toolbed-relay"),"Base directory"),
         ("relayport", "p", "tcp:5773", "TCP port for the relay."),
-        ("webport","p", "tcp:5774", "TCP port for the relay's HTTP interface."),
+        ("webport","p", "tcp:0", "TCP port for the relay's HTTP interface."),
         ]
 
 class StartNodeOptions(BasedirParameterMixin, StartArguments, usage.Options):

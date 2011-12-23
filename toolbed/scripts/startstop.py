@@ -47,8 +47,18 @@ def start(so, out, err):
     #    current process)
     #  * or have the user run a separate command some time after this one
     #    exits.
-    print "starting node in %s" % basedir
-    twistd.runApp(twistd_config)
+    print >>out, "starting node in %s" % basedir
+    child_pid = os.fork()
+    if child_pid == 0:
+        # this is the child: turn int othe new app
+        twistd.runApp(twistd_config)
+        os._exit(1) # should never be called
+        # CONTROL NEVER REACHES HERE
+    # this is the parent
+    print >>out, "child launched .. waiting for startup"
+    from . import webwait
+    baseurl = webwait.wait(basedir, err)
+    print >>out, "child ready at %s" % baseurl
 
 def stop(so, out, err):
     basedir = so["basedir"]

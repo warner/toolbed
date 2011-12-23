@@ -100,13 +100,13 @@ class Roundtrip(unittest.TestCase):
         base = os.path.join("_test", *names)
         self.mkfile(names, "dummy")
         create_node({"basedir": os.path.join(base, "c1"),
-                     "webport": "0",
+                     "webport": "tcp:0",
                      "relay": "tcp:host=localhost:port=0"})
         dbfile1 = self.mkfile(names, "c1", "toolbed.db")
         c1 = FakeClient(database.get_db(dbfile1)[1])
 
         create_node({"basedir": os.path.join(base, "c2"),
-                     "webport": "0",
+                     "webport": "tcp:0",
                      "relay": "tcp:host=localhost:port=0"})
         dbfile2 = self.mkfile(names, "c2", "toolbed.db")
         c2 = FakeClient(database.get_db(dbfile2)[1])

@@ -1,6 +1,7 @@
 import os, json
 from twisted.application import service, strports
 from twisted.web import server, static, resource, http
+from twisted.python import log
 from .nonce import make_nonce
 
 MEDIA_DIRNAME = os.path.join(os.path.dirname(__file__), "media")
@@ -149,11 +150,24 @@ class WebPort(service.MultiService):
 
         site = server.Site(root)
         webport = str(node.get_node_config("webport"))
-        s = strports.service(webport, site)
-        s.setServiceParent(self)
+        self.port_service = strports.service(webport, site)
+        self.port_service.setServiceParent(self)
 
     def startService(self):
         service.MultiService.startService(self)
-        # TODO: now update the webport, if we started with port=0
 
-
+        # now update the webport, if we started with port=0 . This is gross.
+        webport = str(self.node.get_node_config("webport"))
+        pieces = webport.split(":")
+        if pieces[0:2] == ["tcp", "0"]:
+            d = self.port_service._waitingForPort
+            def _ready(port):
+                try:
+                    got_port = port.getHost().port
+                    pieces[1] = str(got_port)
+                    new_webport = ":".join(pieces)
+                    self.node.set_node_config("webport", new_webport)
+                except:
+                    log.err()
+                return port
+            d.addCallback(_ready)

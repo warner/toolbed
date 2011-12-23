@@ -7,7 +7,7 @@ c1:
 c2:
 	-./tool stop c2
 	rm -rf c2
-	./tool create-node -p tcp:5776 c2
+	./tool create-node c2
 relay:
 	-./tool stop relay
 	rm -rf relay

@@ -12,13 +12,7 @@ def open_control_panel(so, out, err):
         return 1
     sqlite, db = database.get_db(dbfile, err)
     c = db.cursor()
-    c.execute("SELECT webport FROM node LIMIT 1")
-    (webport,) = c.fetchone()
-    parts = webport.split(":")
-    assert parts[0] == "tcp"
-    portnum = int(parts[1])
-    baseurl = "http://localhost:%d/" % portnum
-    webwait.wait(baseurl)
+    baseurl = webwait.wait(basedir, err)
     print "Node appears to be running, opening browser"
     c.execute("SELECT name FROM services")
     services = set([str(row[0]) for row in c.fetchall()])
