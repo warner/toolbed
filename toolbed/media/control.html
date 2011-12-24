@@ -43,7 +43,10 @@
   </div>
   <div id="tabs-profile">
     <ul>
-      <li>Name: <input id="profile-name" type="text"/></li>
+      <li>Name: <span id="profile-name">?</span>
+        <input class="hidden" id="profile-name-input" type="text"/>
+        <a class="small" id="profile-name-open-input" href="#">edit</a>
+      </li>
       <li>Icon: <span id="profile-icon">(none)</span>
       <a class="small" id="profile-open-icon-uploader" href="#">upload</a>
       <div class="hidden" id="profile-icon-uploader">Choose icon to upload:

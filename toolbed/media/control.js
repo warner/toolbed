@@ -27,8 +27,9 @@ function sendMessage(event) {
 };
 
 function profileSetName(event) {
-    var name = $("#profile-name").val();
+    var name = $("#profile-name-input").val();
     doAPI("profile-set-name", {"name": name});
+    $("#profile-name").text(name);
 };
 
 function getAddressBook() {
@@ -146,14 +147,21 @@ $(function() {
                        });
       $("#send-message").on("click", sendMessage);
 
-      fill_val("profile-name", "#profile-name");
-      $("#profile-name").on("keyup", function(e) {
-                                if (e.keyCode == 13) {
-                                    profileSetName();
-                                    e.target.blur();
-                                }
-                                return false;
-                                });
+      fill("profile-name", "#profile-name");
+      fill_val("profile-name", "#profile-name-input");
+      $("#profile-name-open-input").on("click", function(e) {
+                                           $("#profile-name-input").slideToggle();
+                                           $("#profile-name").slideToggle();
+                                           });
+      $("#profile-name-input").on("keyup", function(e) {
+                                      if (e.keyCode == 13) {
+                                          profileSetName();
+                                          e.target.blur();
+                                          $(e.target).slideUp();
+                                          $("#profile-name").slideDown();
+                                      }
+                                      return false;
+                                  });
       $("#profile-open-icon-uploader").on("click", function(e) {
                                               $("#profile-icon-uploader").slideToggle();
                                               });
