@@ -130,6 +130,8 @@ class API(resource.Resource):
             text = c.fetchone()[0]
         elif method == "profile-set-name":
             self.client.control_setProfileName(r["args"])
+        elif method == "profile-name":
+            text = self.client.control_getProfileName()
         elif method == "getOutboundInvitations":
             data = self.client.control_getOutboundInvitationsJSONable()
         elif method == "getAddressBook":

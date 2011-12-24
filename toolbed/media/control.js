@@ -14,6 +14,10 @@ function fill(method, element) {
     doAPI(method, {}, function(data) { $(element).text(data.text); });
 };
 
+function fill_val(method, element) {
+    doAPI(method, {}, function(data) { $(element).val(data.text); });
+};
+
 function sendMessage(event) {
     console.log("sendMessage");
     var args = {to: $("#message-to").val(),
@@ -142,6 +146,7 @@ $(function() {
                        });
       $("#send-message").on("click", sendMessage);
 
+      fill_val("profile-name", "#profile-name");
       $("#profile-name").on("keyup", function(e) {
                                 if (e.keyCode == 13) {
                                     profileSetName();
