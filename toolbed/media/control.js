@@ -119,7 +119,7 @@ function acceptInvitation(event) {
 };
 
 $(function() {
-      $("#tabs").tabs({selected: -1,
+      $("#tabs").tabs({selected: 0,
                        show: function(event, ui)
                        {
                            if (ui.index == 0) {
