@@ -1,7 +1,8 @@
+import re
 import collections
 from twisted.application import service
 from twisted.python import log
-from twisted.internet import protocol, endpoints, reactor
+from twisted.internet import protocol, reactor
 from twisted.protocols import basic
 from .netstring import make_netstring, split_netstrings
 from . import invitation
@@ -14,18 +15,43 @@ class Connection(basic.NetstringReceiver):
             log.msg("malformed netstring received")
             self.transport.loseConnection()
             return
-        self.factory.message_received(self, messages)
+        self.factory.client.message_received(self, messages)
 
-class Client(service.MultiService, protocol.ClientFactory):
+class ConnectionFactory(protocol.ReconnectingClientFactory):
     protocol = Connection
 
+    def buildProtocol(self, addr):
+        p = protocol.ReconnectingClientFactory.buildProtocol(self, addr)
+        self.resetDelay()
+        reactor.callLater(0, self.client.connected, p)
+        return p
+
+    def clientConnectionLost(self, connector, unused_reason):
+        protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, unused_reason)
+        self.client.disconnected()
+
+
+class Client(service.MultiService):
     def __init__(self, db):
         service.MultiService.__init__(self)
         self.db = db
         c = self.db.cursor()
         c.execute("SELECT `relay_location` FROM `client_config`")
         relay_location = str(c.fetchone()[0])
-        self.endpoint = endpoints.clientFromString(reactor, relay_location)
+        # I'd prefer to use:
+        #
+        #  self.endpoint = endpoints.clientFromString(reactor, relay_location)
+        #
+        # but endpoints don't play nicely with the ReconnectingClientFactory
+        # that I need. So we manually parse out "tcp:host=HOST:port=PORT" and
+        # build a boring old-style connection out of that
+        mo = re.search(r'^tcp:host=([^:]+):port=(\d+)$', relay_location)
+        if not mo:
+            raise ValueError("unable to parse relay_location '%s'" % relay_location)
+        self.relay_host = mo.group(1)
+        self.relay_port = int(mo.group(2))
+        self.factory = ConnectionFactory()
+        self.factory.client = self
         self.connection = None
 
         self.pending_messages = collections.deque()
@@ -34,24 +60,21 @@ class Client(service.MultiService, protocol.ClientFactory):
         self.vk_s = str(c.fetchone()[0])
         self.send_message_to_relay("subscribe", self.vk_s)
 
-
-    def maybe_send_messages(self):
-        if not self.connection:
-            d = self.endpoint.connect(self)
-            reactor.callLater(30, d.cancel)
-            d.addCallback(self.connected)
-            d.addErrback(self.connect_failed)
-            return
-        while self.pending_messages:
-            m = self.pending_messages.popleft()
-            self.connection.sendString(m)
+    def startService(self):
+        service.MultiService.startService(self)
+        reactor.connectTCP(self.relay_host, self.relay_port, self.factory)
 
     def connected(self, connection):
         self.connection = connection
         self.maybe_send_messages()
 
-    def connect_failed(self, why):
-        log.err(why, "connection failed")
+    def disconnected(self):
+        self.connection = None
+
+    def maybe_send_messages(self):
+        while self.connection and self.pending_messages:
+            m = self.pending_messages.popleft()
+            self.connection.sendString(m)
 
     def send_message_to_relay(self, *messages):
         msg = "".join([make_netstring(m) for m in messages])
