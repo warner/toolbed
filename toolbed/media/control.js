@@ -191,14 +191,15 @@ $(function() {
                                       return false;
                                   });
       $("#profile-open-icon-uploader")
-          .on("click", function(e) {
-                  $("#profile-icon-upload").click();
-              })
-          .on("dragenter", function(e) {e.stopPropagation();
-                                        e.preventDefault(); }, false)
-          .on("dragover", function(e) {e.stopPropagation();
-                                       e.preventDefault(); }, false)
-          .on("drop", profileDropIcon, false);
+          .on({click: function(e) {
+                   $("#profile-icon-upload").click();
+                   },
+               dragenter: function(e) {e.stopPropagation();
+                                       e.preventDefault(); },
+               dragover: function(e) {e.stopPropagation();
+                                      e.preventDefault(); },
+               drop: profileDropIcon
+               });
 
       $("#profile-icon-upload").on("change", profileSetIcon);
 
