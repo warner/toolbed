@@ -36,6 +36,29 @@ function profileSetName(event) {
     $("#profile-name").text(name);
 };
 
+function profileFillIcon() {
+    doAPI("profile-get-icon", {},
+          function(data) {
+              $("#profile-icon").attr("src", data["icon-data"]);
+              });
+};
+
+function profileSetIcon(e) {
+    var iconfile = this.files[0];
+    //var fileurl = window.URL.createObjectURL(iconfile);
+    //console.log("URL", fileurl, iconfile.size, iconfile.type);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var data = e.target.result;
+        doAPI("profile-set-icon", {"icon-data": data}, profileFillIcon);
+    };
+    reader.readAsDataURL(iconfile);
+};
+
+function profileDropIcon(e) {
+    console.log("upload drop");
+};
+
 function getAddressBook() {
     doAPI("getAddressBook", {},
           function (data) {
@@ -153,6 +176,7 @@ $(function() {
 
       fill("profile-name", "#profile-name");
       fill_val("profile-name", "#profile-name-input");
+      profileFillIcon();
       $("#profile-name-open-input").on("click", function(e) {
                                            htoggle("#profile-name-input");
                                            htoggle("#profile-name");
@@ -166,12 +190,17 @@ $(function() {
                                       }
                                       return false;
                                   });
-      $("#profile-open-icon-uploader").on("click", function(e) {
-                                              $("#profile-icon-uploader").slideToggle();
-                                              });
-      $("#profile-file-upload").on("change", function(e) {
-                                       this.files;
-                                       });
+      $("#profile-open-icon-uploader")
+          .on("click", function(e) {
+                  $("#profile-icon-upload").click();
+              })
+          .on("dragenter", function(e) {e.stopPropagation();
+                                        e.preventDefault(); }, false)
+          .on("dragover", function(e) {e.stopPropagation();
+                                       e.preventDefault(); }, false)
+          .on("drop", profileDropIcon, false);
+
+      $("#profile-icon-upload").on("change", profileSetIcon);
 
       $("#toggle-pending-invitations").on("click", togglePendingInvitations);
       $("#invite input").on("click", startInvitation);

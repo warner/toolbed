@@ -132,6 +132,11 @@ class API(resource.Resource):
             self.client.control_setProfileName(r["args"])
         elif method == "profile-name":
             text = self.client.control_getProfileName()
+        elif method == "profile-set-icon":
+            self.client.control_setProfileIcon(r["args"])
+            data = {}
+        elif method == "profile-get-icon":
+            data = {"icon-data": self.client.control_getProfileIcon()}
         elif method == "getOutboundInvitations":
             data = self.client.control_getOutboundInvitationsJSONable()
         elif method == "getAddressBook":

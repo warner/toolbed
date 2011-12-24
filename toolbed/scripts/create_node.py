@@ -20,8 +20,8 @@ def create_node(so, stdout=sys.stdout, stderr=sys.stderr):
               " (`privkey`, `pubkey`, `relay_location`) VALUES (?,?,?)",
               (sk_s, vk_s, so["relay"]))
     c.execute("INSERT INTO `client_profile`"
-              " (`name`) VALUES (?)",
-              ("",))
+              " (`name`, `icon_data`) VALUES (?,?)",
+              ("",""))
     db.commit()
     print >>stdout, "node created in %s" % basedir
     return 0

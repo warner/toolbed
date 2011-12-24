@@ -119,6 +119,17 @@ class Client(service.MultiService):
         c.execute("UPDATE `client_profile` SET `name`=?", (args["name"],))
         self.db.commit()
 
+    def control_getProfileIcon(self):
+        c = self.db.cursor()
+        c.execute("SELECT `icon_data` FROM `client_profile`")
+        return c.fetchone()[0]
+
+    def control_setProfileIcon(self, args):
+        c = self.db.cursor()
+        c.execute("UPDATE `client_profile` SET `icon_data`=?",
+                  (args["icon-data"],))
+        self.db.commit()
+
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
         msg_to = str(args["to"])

@@ -32,7 +32,8 @@ CREATE TABLE `client_config` -- contains one row
 
 CREATE TABLE `client_profile` -- contains one row
 (
- `name` STRING
+ `name` STRING,
+ `icon_data` STRING
 );
 
 -- outbound_invitations are created as soon as the user starts the invitation
