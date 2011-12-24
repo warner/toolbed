@@ -30,6 +30,11 @@ CREATE TABLE `client_config` -- contains one row
  `relay_location` STRING
 );
 
+CREATE TABLE `client_profile` -- contains one row
+(
+ `name` STRING
+);
+
 -- outbound_invitations are created as soon as the user starts the invitation
 -- process. stage=0 means the user has been told the invitation code (with
 -- instructions to send "M0" to the recipient), but our node is still waiting

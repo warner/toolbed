@@ -128,6 +128,8 @@ class API(resource.Resource):
         elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
+        elif method == "profile-set-name":
+            self.client.control_setProfileName(r["args"])
         elif method == "getOutboundInvitations":
             data = self.client.control_getOutboundInvitationsJSONable()
         elif method == "getAddressBook":

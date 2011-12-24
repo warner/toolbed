@@ -22,6 +22,11 @@ function sendMessage(event) {
     doAPI("sendMessage", args, function(){alert("Sent!");});
 };
 
+function profileSetName(event) {
+    var name = $("#profile-name").val();
+    doAPI("profile-set-name", {"name": name});
+};
+
 function getAddressBook() {
     doAPI("getAddressBook", {},
           function (data) {
@@ -128,7 +133,7 @@ $(function() {
                                fill("relay_connected", "#relay_connected");
                                fill("pubkey", "#pubkey");
                            }
-                           else if (ui.index == 1) {
+                           else if (ui.index == 2) {
                                getPendingInvitations();
                                getAddressBook();
                            }
@@ -136,6 +141,20 @@ $(function() {
                        }
                        });
       $("#send-message").on("click", sendMessage);
+
+      $("#profile-name").on("keyup", function(e) {
+                                if (e.keyCode == 13) {
+                                    profileSetName();
+                                    e.target.blur();
+                                }
+                                return false;
+                                });
+      $("#profile-open-icon-uploader").on("click", function(e) {
+                                              $("#profile-icon-uploader").slideToggle();
+                                              });
+      $("#profile-file-upload").on("change", function(e) {
+                                       this.files;
+                                       });
 
       $("#toggle-pending-invitations").on("click", togglePendingInvitations);
       $("#invite input").on("click", startInvitation);

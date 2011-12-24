@@ -22,6 +22,7 @@
 <div id="tabs">
   <ul>
     <li><a href="#tabs-node-control">Node Control</a></li>
+    <li><a href="#tabs-profile">Your Profile</a></li>
     <li><a href="#tabs-address-book">Address Book</a></li>
     <li><a href="#tabs-invitations">Accept an Invitation</a></li>
   </ul>
@@ -39,6 +40,19 @@
         <li><input id="send-message"  type="submit" value="Send!"/></li>
       </ul>
     </div>
+  </div>
+  <div id="tabs-profile">
+    <ul>
+      <li>Name: <input id="profile-name" type="text"/></li>
+      <li>Icon: <span id="profile-icon">(none)</span>
+      <a class="small" id="profile-open-icon-uploader" href="#">upload</a>
+      <div class="hidden" id="profile-icon-uploader">Choose icon to upload:
+        <input type="file" id="profile-file-upload"/>
+        <!-- FF9 can ask for images from the camera -->
+        <div>Take a picture: <input type="file" accept="image/*"></div>
+      </div>
+      </li>
+    </ul>
   </div>
   <div id="tabs-address-book">
 

@@ -109,6 +109,12 @@ class Client(service.MultiService):
     def control_relayConnected(self):
         return bool(self.connection)
 
+    def control_setProfileName(self, args):
+        print "set profile name", args["name"]
+        c = self.db.cursor()
+        c.execute("UPDATE `client_profile` SET `name`=?", (args["name"],))
+        self.db.commit()
+
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
         msg_to = str(args["to"])
