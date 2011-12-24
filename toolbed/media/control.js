@@ -18,6 +18,10 @@ function fill_val(method, element) {
     doAPI(method, {}, function(data) { $(element).val(data.text); });
 };
 
+function htoggle(element) {
+    $(element).toggle("slide", {direction: "horizontal"});
+};
+
 function sendMessage(event) {
     console.log("sendMessage");
     var args = {to: $("#message-to").val(),
@@ -150,15 +154,15 @@ $(function() {
       fill("profile-name", "#profile-name");
       fill_val("profile-name", "#profile-name-input");
       $("#profile-name-open-input").on("click", function(e) {
-                                           $("#profile-name-input").slideToggle();
-                                           $("#profile-name").slideToggle();
-                                           });
+                                           htoggle("#profile-name-input");
+                                           htoggle("#profile-name");
+                                       });
       $("#profile-name-input").on("keyup", function(e) {
                                       if (e.keyCode == 13) {
                                           profileSetName();
                                           e.target.blur();
-                                          $(e.target).slideUp();
-                                          $("#profile-name").slideDown();
+                                          htoggle("#profile-name-input");
+                                          htoggle("#profile-name");
                                       }
                                       return false;
                                   });
