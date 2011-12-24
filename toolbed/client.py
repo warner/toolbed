@@ -99,6 +99,9 @@ class Client(service.MultiService):
         self.db.commit()
         # TODO: notify clients to refresh
 
+    def control_relayConnected(self):
+        return bool(self.connection)
+
     def control_sendMessage(self, args):
         print "SENDMESSAGE", args
         msg_to = str(args["to"])

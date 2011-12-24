@@ -125,6 +125,7 @@ $(function() {
                            if (ui.index == 0) {
                                fill("webport", "#webport");
                                fill("relay_location", "#relay_location");
+                               fill("relay_connected", "#relay_connected");
                                fill("pubkey", "#pubkey");
                            }
                            else if (ui.index == 1) {

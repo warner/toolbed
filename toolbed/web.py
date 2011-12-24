@@ -63,6 +63,12 @@ class API(resource.Resource):
         elif method == "relay_location":
             c.execute("SELECT `relay_location` FROM `client_config`")
             text = c.fetchone()[0]
+        elif method == "relay_connected":
+            connected = self.client.control_relayConnected()
+            if connected:
+                text = "connected"
+            else:
+                text = "not connected"
         elif method == "pubkey":
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
