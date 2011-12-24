@@ -153,4 +153,6 @@ $(function() {
                                                           "connected" :
                                                           "not connected");
                                });
+      evt.addEventListener("address-book-changed", getAddressBook);
+      evt.addEventListener("invitations-changed", getPendingInvitations);
 });

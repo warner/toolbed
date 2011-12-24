@@ -103,7 +103,8 @@ class Client(service.MultiService):
         c.execute("INSERT INTO `addressbook` VALUES (?,?)",
                   (petname, data))
         self.db.commit()
-        # TODO: notify clients to refresh
+        self.notify("invitations-changed", None)
+        self.notify("address-book-changed", None)
 
     def control_relayConnected(self):
         return bool(self.connection)
