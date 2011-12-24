@@ -1,5 +1,7 @@
 import re
 import collections
+import weakref
+import json
 from twisted.application import service
 from twisted.python import log
 from twisted.internet import protocol, reactor
@@ -56,6 +58,8 @@ class Client(service.MultiService):
 
         self.pending_messages = collections.deque()
 
+        self.subscribers = weakref.WeakKeyDictionary()
+
         c.execute("SELECT `pubkey` FROM `client_config`");
         self.vk_s = str(c.fetchone()[0])
         self.send_message_to_relay("subscribe", self.vk_s)
@@ -67,9 +71,11 @@ class Client(service.MultiService):
     def connected(self, connection):
         self.connection = connection
         self.maybe_send_messages()
+        self.notify("relay-connection-changed", True)
 
     def disconnected(self):
         self.connection = None
+        self.notify("relay-connection-changed", False)
 
     def maybe_send_messages(self):
         while self.connection and self.pending_messages:
@@ -177,3 +183,13 @@ class Client(service.MultiService):
                   "key": str(row[1]) }
                 for row in c.fetchall()]
         return data
+
+    def control_subscribe_events(self, subscriber):
+        self.subscribers[subscriber] = None
+    def control_unsubscribe_events(self, subscriber):
+        self.subscribers.pop(subscriber, None)
+    def notify(self, what, data):
+        print "NOTIFY", what, data
+        for s in self.subscribers:
+            msg = json.dumps({"message": data})
+            s.event(what, msg) # TODO: eventual-send

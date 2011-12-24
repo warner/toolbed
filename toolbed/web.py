@@ -13,6 +13,34 @@ def read_media(fn):
     f.close()
     return data
 
+class SSEProtocol:
+    def __init__(self, request):
+        self.request = request
+    def connectionLost(self, f=None):
+        pass
+    def sendEvent(self, data, name=None, id=None, retry=None):
+        if name:
+            self.request.write("event: %s\n" % name.encode("utf-8"))
+        if id:
+            self.request.write("id: %s\n" % id.encode("utf-8"))
+        if retry:
+            self.request.write("retry: %d\n" % retry) # milliseconds
+        for line in data.splitlines():
+            self.request.write("data: %s\n" % line.encode("utf-8"))
+        self.request.write("\n")
+    def loseConnection(self):
+        self.request.finish()
+
+class SSEResource(resource.Resource):
+    def render_GET(self, request):
+        request.setHeader("content-type", "text/event-stream")
+        p = self.buildProtocol(request)
+        request.notifyFinish().addErrback(p.connectionLost)
+        return server.NOT_DONE_YET
+
+    def buildProtocol(self, request):
+        return SSEProtocol(request)
+
 class RelayAPI(resource.Resource):
     def __init__(self, db, relay):
         resource.Resource.__init__(self)
@@ -40,6 +68,34 @@ class Relay(resource.Resource):
         request.setHeader("content-type", "text/html")
         return read_media("relay.html")
 
+class ClientEventsProtocol(SSEProtocol):
+    def __init__(self, db, client, request):
+        SSEProtocol.__init__(self, request)
+        self.db = db
+        self.client = client
+        client.control_subscribe_events(self)
+    def connectionLost(self, f=None):
+        self.client.control_unsubscribe_events(self)
+    def event(self, what, data):
+        self.sendEvent(data, name=what)
+
+class Events(SSEResource):
+    def __init__(self, tokens, db, client):
+        SSEResource.__init__(self)
+        self.tokens = tokens
+        self.db = db
+        self.client = client
+
+    def buildProtocol(self, request):
+        return ClientEventsProtocol(self.db, self.client, request)
+
+    def render_GET(self, request):
+        token = request.args["token"][0]
+        if token not in self.tokens:
+            request.setHeader("content-type", "text/plain")
+            return ("Sorry, this session token is expired,"
+                    " please run 'tool open' again\n")
+        return SSEResource.render_GET(self, request)
 
 class API(resource.Resource):
     def __init__(self, tokens, db, client):
@@ -152,6 +208,8 @@ class WebPort(service.MultiService):
             c = Control(db)
             capi = API(c.tokens, db, node.client)
             c.putChild("api", capi)
+            client_events = Events(c.tokens, db, node.client)
+            c.putChild("events", client_events)
             root.putChild("control", c)
 
         site = server.Site(root)

@@ -145,4 +145,12 @@ $(function() {
                                  });
       $("#send-invitation").on("click", sendInvitation);
       $("#accept-invitation").on("click", acceptInvitation);
+      var evt = new EventSource("/control/events?token="+token);
+      evt.addEventListener("relay-connection-changed",
+                           function (e) {
+                               var connected = JSON.parse(e.data).message;
+                               $("#relay_connected").text(connected ?
+                                                          "connected" :
+                                                          "not connected");
+                               });
 });
