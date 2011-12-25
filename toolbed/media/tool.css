@@ -16,3 +16,10 @@
 .hidden {
     display: none;
 }
+
+.profile-icon-drop {
+    height: 125px;
+    width: 125px;
+    padding: 5px;
+    border: 2px solid gray;
+}

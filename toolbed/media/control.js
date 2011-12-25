@@ -43,8 +43,7 @@ function profileFillIcon() {
               });
 };
 
-function profileSetIcon(e) {
-    var iconfile = this.files[0];
+function profileSetIcon(iconfile) {
     //var fileurl = window.URL.createObjectURL(iconfile);
     //console.log("URL", fileurl, iconfile.size, iconfile.type);
     var reader = new FileReader();
@@ -55,8 +54,11 @@ function profileSetIcon(e) {
     reader.readAsDataURL(iconfile);
 };
 
-function profileDropIcon(e) {
-    console.log("upload drop");
+function profileDropIcon(e, ui) {
+    e.stopPropagation();
+    e.preventDefault();
+    profileSetIcon(e.originalEvent.dataTransfer.files[0]);
+    return false;
 };
 
 function getAddressBook() {
@@ -194,14 +196,22 @@ $(function() {
           .on({click: function(e) {
                    $("#profile-icon-upload").click();
                    },
-               dragenter: function(e) {e.stopPropagation();
-                                       e.preventDefault(); },
-               dragover: function(e) {e.stopPropagation();
-                                      e.preventDefault(); },
-               drop: profileDropIcon
                });
 
-      $("#profile-icon-upload").on("change", profileSetIcon);
+      $("#profile-icon-drop")
+          //.droppable({drop: profileDropIcon2})
+          .on({drop: profileDropIcon,
+               dragenter: function(e) {e.stopPropagation();
+                                       e.preventDefault();
+                                       return false;},
+               dragover: function(e) {e.stopPropagation();
+                                      e.preventDefault();
+                                      return false;}
+              });
+
+      $("#profile-icon-upload").on("change", function(e) {
+                                       profileSetIcon(this.files[0]);
+                                       });
 
       $("#toggle-pending-invitations").on("click", togglePendingInvitations);
       $("#invite input").on("click", startInvitation);
