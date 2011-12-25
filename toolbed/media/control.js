@@ -153,7 +153,7 @@ function acceptInvitation(event) {
     $("#invite-code").val("");
     doAPI("acceptInvitation", args,
           function () {
-              $("#tabs").tabs("select", 1);
+              $("#tabs").tabs("select", 2);
               });
 };
 

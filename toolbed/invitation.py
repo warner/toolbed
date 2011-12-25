@@ -35,8 +35,8 @@ class OutboundInvitation(Common):
         self.code = str(db_row[3])
         self.code_binary = a2b(self.code)
         self.stage = int(db_row[4])
-        self.abob = str(db_row[5])
-        self.balice = str(db_row[6])
+        self.forward_payload = str(db_row[5])
+        self.reverse_payload = str(db_row[6])
 
     def expired(self, clock=time.time):
         return bool(self.expires < clock())
@@ -49,56 +49,57 @@ class OutboundInvitation(Common):
         messages = self.unpack_messages(h, msg)
         if self.stage == 0:
             # we expect M1: (1,A2,A[bob])
-            msgnum,addr,abob = messages
+            msgnum,addr,reverse_payload = messages
             if msgnum != "1":
                 raise ValueError("unexpected message number")
             c.execute("UPDATE `outbound_invitations`"
-                      " SET `stage`=2, `abob`=?"
+                      " SET `stage`=2, `reverse_payload`=?"
                       " WHERE `petname`=? AND `code`=?",
-                      (abob, self.petname, self.code))
+                      (reverse_payload, self.petname, self.code))
             db.commit()
             # now send M2
-            h,m = self.pack_messages("2", self.balice)
+            h,m = self.pack_messages("2", self.forward_payload)
             self.client.send_message_to_relay("send", addr, h, m)
         elif self.stage == 2:
             # we expect M3, just an ACK: (3)
             msgnum, = messages
             if msgnum != "3":
                 raise ValueError("unexpected message number")
-            self.client.add_addressbook_entry(self.petname, self.abob)
+            self.client.add_addressbook_entry(self.petname, self.reverse_payload)
             c.execute("DELETE FROM `outbound_invitations`"
                       " WHERE `petname`=? and `code`=?",
                       (self.petname, self.code))
             db.commit()
 
-def create_outbound(petname, client, balice):
+def create_outbound(petname, client, forward_payload):
     sent = time.time()
     expires = sent+24*60*60
     code = b2a(os.urandom(256/8))
     stage = 0
     i = OutboundInvitation(client, (sent, expires, petname, code, stage,
-                                    "", balice))
+                                    forward_payload, ""))
     db = client.db
     c = db.cursor()
     c.execute("INSERT INTO `outbound_invitations`"
               " VALUES (?,?,?,?,?,?,?)",
-              (sent, expires, petname, code, 0, "", balice))
+              (sent, expires, petname, code, 0, forward_payload, ""))
     db.commit()
     return i
 
 class InboundInvitation(Common):
-    def __init__(self, client, db_row, abob):
+    def __init__(self, client, db_row, reverse_payload):
         self.client = client
         self.petname = str(db_row[0])
         self.code = str(db_row[1])
         self.code_binary = a2b(self.code)
         self.receiver_address = str(db_row[2])
-        self.abob = abob
+        self.reverse_payload = reverse_payload
 
     def start(self):
         self.client.send_message_to_relay("subscribe", self.receiver_address)
         addr = self.get_sender_address()
-        h,m = self.pack_messages("1", self.receiver_address, self.abob)
+        h,m = self.pack_messages("1", self.receiver_address,
+                                 self.reverse_payload)
         self.client.send_message_to_relay("send", addr, h, m)
 
     def get_my_address(self):
@@ -108,10 +109,10 @@ class InboundInvitation(Common):
         messages = self.unpack_messages(h, msg)
         # We're created by M0, so we only have one stage here. We expect M2:
         # (2,B[alice]), and respond with M3 (the ACK)
-        msgnum,balice = messages
+        msgnum,forward_payload = messages
         if msgnum != "2":
             raise ValueError("unexpected message number")
-        self.client.add_addressbook_entry(self.petname, balice)
+        self.client.add_addressbook_entry(self.petname, forward_payload)
         db = self.client.db
         c = db.cursor()
         c.execute("DELETE FROM `inbound_invitations`"
@@ -123,9 +124,10 @@ class InboundInvitation(Common):
         self.client.send_message_to_relay("send", addr, h, m)
 
 
-def accept_invitation(petname, code, abob, client):
+def accept_invitation(petname, code, reverse_payload, client):
     receiver_address = "channel-"+b2a(os.urandom(256/8))
-    i = InboundInvitation(client, (petname, code, receiver_address), abob)
+    i = InboundInvitation(client, (petname, code, receiver_address),
+                          reverse_payload)
     db = client.db
     c = db.cursor()
     c.execute("INSERT INTO `inbound_invitations`"

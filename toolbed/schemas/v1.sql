@@ -43,6 +43,10 @@ CREATE TABLE `client_profile` -- contains one row
 -- and M2 was sent, still waiting for M3 (the ACK) to arrive. When M3
 -- arrives, the invitation is complete and the whole row is removed.
 
+-- "forward payload" is always sent from the side creating the invitation to
+-- the side accepting the invitation. "reverse payload" goes from the
+-- accepting side to the creating side.
+
 CREATE TABLE `outbound_invitations`
 (
  `sent` INTEGER, -- seconds-since-epoch from the "send" button being pressed
@@ -50,8 +54,8 @@ CREATE TABLE `outbound_invitations`
  `petname` STRING,
  `code` STRING, -- invitation code (sent to recipient)
  `stage` INTEGER,
- `abob` STRING, -- addressbook entry for us
- `balice` STRING -- our addressbook entry for them
+ `forward_payload` STRING, -- our addressbook entry for them
+ `reverse_payload` STRING -- their addressbook entry for us
 );
 
 -- inbound invitations are created when M0 is pasted in by the user and M1 is
@@ -69,5 +73,6 @@ CREATE TABLE `inbound_invitations`
 CREATE TABLE `addressbook`
 (
  `petname` STRING,
- `key` STRING
+ `selfname` STRING,
+ `icon_data` STRING
 );

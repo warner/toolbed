@@ -98,10 +98,11 @@ class Client(service.MultiService):
             if to == i.get_my_address():
                 i.rx_message(*messages[2:])
 
-    def add_addressbook_entry(self, petname, data):
+    def add_addressbook_entry(self, petname, payload_data):
+        data = json.loads(payload_data.decode("utf-8"))
         c = self.db.cursor()
-        c.execute("INSERT INTO `addressbook` VALUES (?,?)",
-                  (petname, data))
+        c.execute("INSERT INTO `addressbook` VALUES (?,?,?)",
+                  (petname, data["my-name"], data["my-icon"]))
         self.db.commit()
         self.notify("invitations-changed", None)
         self.notify("address-book-changed", None)
@@ -144,8 +145,14 @@ class Client(service.MultiService):
         # in the medium-size code protocol, the invitation code I is just a
         # random string.
         print "sendInvitation", petname
-        BALICE = "balice" # this is what the recipient gets
-        invitation.create_outbound(petname, self, BALICE)
+        payload = {"my-name": self.control_getProfileName(),
+                   "my-icon": self.control_getProfileIcon(),
+                   # TODO: passing the icon as a data: URL is probably an
+                   # attack vector, change it to just pass the data and have
+                   # the client add the "data:" prefix
+                   }
+        forward_payload_data = json.dumps(payload).encode("utf-8")
+        invitation.create_outbound(petname, self, forward_payload_data)
         self.subscribe_to_all_pending_invitations()
         # when this XHR returns, the JS client will fetch the pending
         # invitation list and show the most recent entry
@@ -184,8 +191,12 @@ class Client(service.MultiService):
 
     def control_acceptInvitation(self, invite):
         print "acceptInvitation", invite["name"], invite["code"]
-        ABOB = "abob" # this is what the sender gets
-        invitation.accept_invitation(invite["name"], invite["code"], ABOB, self)
+        payload = {"my-name": self.control_getProfileName(),
+                   "my-icon": self.control_getProfileIcon(), # see above
+                   }
+        reverse_payload_data = json.dumps(payload).encode("utf-8")
+        invitation.accept_invitation(invite["name"], invite["code"],
+                                     reverse_payload_data, self)
 
     def control_getOutboundInvitationsJSONable(self):
         data = [{ "sent": i.sent,
@@ -199,10 +210,12 @@ class Client(service.MultiService):
 
     def control_getAddressBookJSONable(self):
         c = self.db.cursor()
-        c.execute("SELECT `petname`,`key` FROM `addressbook`"
+        c.execute("SELECT `petname`,`selfname`,`icon_data` FROM `addressbook`"
                   " ORDER BY `petname` ASC")
         data = [{ "petname": str(row[0]),
-                  "key": str(row[1]) }
+                  "selfname": str(row[1]),
+                  "icon_data": str(row[2]),
+                  }
                 for row in c.fetchall()]
         return data
 
