@@ -129,11 +129,11 @@ class API(resource.Resource):
             c.execute("SELECT `pubkey` FROM `client_config`")
             text = c.fetchone()[0]
         elif method == "profile-set-name":
-            self.client.control_setProfileName(r["args"])
+            self.client.control_setProfileName(str(r["args"]["name"]))
         elif method == "profile-name":
             text = self.client.control_getProfileName()
         elif method == "profile-set-icon":
-            self.client.control_setProfileIcon(r["args"])
+            self.client.control_setProfileIcon(str(r["args"]["icon-data"]))
             data = {}
         elif method == "profile-get-icon":
             data = {"icon-data": self.client.control_getProfileIcon()}
@@ -146,11 +146,12 @@ class API(resource.Resource):
         elif method == "startInvitation":
             self.client.control_startInvitation(r["args"])
         elif method == "sendInvitation":
-            self.client.control_sendInvitation(r["args"])
+            self.client.control_sendInvitation(str(r["args"]["name"]))
         elif method == "cancelInvitation":
             self.client.control_cancelInvitation(r["args"])
         elif method == "acceptInvitation":
-            self.client.control_acceptInvitation(r["args"])
+            self.client.control_acceptInvitation(str(r["args"]["name"]),
+                                                 str(r["args"]["code"]))
 
         else:
             raise ValueError("Unknown method '%s'" % method)

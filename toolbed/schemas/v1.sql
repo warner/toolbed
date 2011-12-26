@@ -49,6 +49,7 @@ CREATE TABLE `client_profile` -- contains one row
 
 CREATE TABLE `outbound_invitations`
 (
+ `address` STRING, -- what we listen for
  `sent` INTEGER, -- seconds-since-epoch from the "send" button being pressed
  `expires` INTEGER, -- when the invitation expires
  `petname` STRING,
@@ -65,9 +66,9 @@ CREATE TABLE `outbound_invitations`
 -- sender waits for an ACK, not us)
 CREATE TABLE `inbound_invitations`
 (
+ `address` STRING, -- our address
  `petname` STRING,
- `code` STRING,
- `address` STRING -- our address
+ `code` STRING
 );
 
 CREATE TABLE `addressbook`

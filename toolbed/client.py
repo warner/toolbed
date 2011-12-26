@@ -89,14 +89,25 @@ class Client(service.MultiService):
 
     def message_received(self, p, messages):
         assert str(messages[0]) == "send"
-        to = str(messages[1])
         #assert to == self.vk_s
         print "MSG", str(messages[2])
 
-        for i in (self.current_outbound_invitations()
-                  + self.current_inbound_invitations()):
-            if to == i.get_my_address():
-                i.rx_message(*messages[2:])
+        c = self.db.cursor()
+        c.execute("SELECT * FROM `outbound_invitations`")
+        self._check_rows(messages, c.fetchall(), invitation.process_outbound)
+        c.execute("SELECT * FROM `inbound_invitations`")
+        self._check_rows(messages, c.fetchall(), invitation.process_inbound)
+
+    def _check_rows(self, messages, rows, process):
+        to = str(messages[1])
+        for row in rows:
+            if str(row[0]) == to:
+                outmsgs, newentry = process(self.db, row, *messages[2:])
+                for outmsg in outmsgs:
+                    self.send_message_to_relay(*outmsg)
+                if newentry:
+                    petname, payload_data = newentry
+                    self.add_addressbook_entry(petname, payload_data)
 
     def add_addressbook_entry(self, petname, payload_data):
         data = json.loads(payload_data.decode("utf-8"))
@@ -115,9 +126,9 @@ class Client(service.MultiService):
         c.execute("SELECT `name` FROM `client_profile`")
         return c.fetchone()[0]
 
-    def control_setProfileName(self, args):
+    def control_setProfileName(self, name):
         c = self.db.cursor()
-        c.execute("UPDATE `client_profile` SET `name`=?", (args["name"],))
+        c.execute("UPDATE `client_profile` SET `name`=?", (name,))
         self.db.commit()
 
     def control_getProfileIcon(self):
@@ -125,10 +136,9 @@ class Client(service.MultiService):
         c.execute("SELECT `icon_data` FROM `client_profile`")
         return c.fetchone()[0]
 
-    def control_setProfileIcon(self, args):
+    def control_setProfileIcon(self, icon_data):
         c = self.db.cursor()
-        c.execute("UPDATE `client_profile` SET `icon_data`=?",
-                  (args["icon-data"],))
+        c.execute("UPDATE `client_profile` SET `icon_data`=?", (icon_data,))
         self.db.commit()
 
     def control_sendMessage(self, args):
@@ -140,8 +150,7 @@ class Client(service.MultiService):
     def control_startInvitation(self, args):
         print "startInvitation"
 
-    def control_sendInvitation(self, args):
-        petname = str(args["name"])
+    def control_sendInvitation(self, petname):
         # in the medium-size code protocol, the invitation code I is just a
         # random string.
         print "sendInvitation", petname
@@ -152,29 +161,14 @@ class Client(service.MultiService):
                    # the client add the "data:" prefix
                    }
         forward_payload_data = json.dumps(payload).encode("utf-8")
-        invitation.create_outbound(petname, self, forward_payload_data)
+        invitation.create_outbound(self.db, petname, forward_payload_data)
         self.subscribe_to_all_pending_invitations()
         # when this XHR returns, the JS client will fetch the pending
         # invitation list and show the most recent entry
 
-    def current_outbound_invitations(self):
-        c = self.db.cursor()
-        c.execute("SELECT * FROM `outbound_invitations`")
-        return [invitation.OutboundInvitation(self,row)
-                for row in c.fetchall()]
-
-    def current_inbound_invitations(self):
-        c = self.db.cursor()
-        c.execute("SELECT * FROM `inbound_invitations`")
-        return [invitation.InboundInvitation(self,row,None)
-                for row in c.fetchall()]
-
-
     def subscribe_to_all_pending_invitations(self):
-        for i in self.current_outbound_invitations():
-            self.send_message_to_relay("subscribe", i.get_my_address())
-        for i in self.current_inbound_invitations():
-            self.send_message_to_relay("subscribe", i.get_my_address())
+        for addr in invitation.addresses_to_subscribe(self.db):
+            self.send_message_to_relay("subscribe", addr)
         # TODO: when called by startInvitation, it'd be nice to sync here: be
         # certain that the relay server has received our subscription
         # request, before returning to startInvitation and allowing the user
@@ -189,24 +183,20 @@ class Client(service.MultiService):
                   (str(invite["petname"]), str(invite["code"])))
         self.db.commit()
 
-    def control_acceptInvitation(self, invite):
-        print "acceptInvitation", invite["name"], invite["code"]
+    def control_acceptInvitation(self, petname, code_ascii):
+        print "acceptInvitation", petname, code_ascii
         payload = {"my-name": self.control_getProfileName(),
                    "my-icon": self.control_getProfileIcon(), # see above
                    }
         reverse_payload_data = json.dumps(payload).encode("utf-8")
-        invitation.accept_invitation(invite["name"], invite["code"],
-                                     reverse_payload_data, self)
+        outmsgs = invitation.accept_invitation(self.db,
+                                               petname, code_ascii,
+                                               reverse_payload_data)
+        for outmsg in outmsgs:
+            self.send_message_to_relay(*outmsg)
 
     def control_getOutboundInvitationsJSONable(self):
-        data = [{ "sent": i.sent,
-                  "expires": i.expires,
-                  "petname": i.petname,
-                  "code": i.code,
-                  "stage": i.stage,
-                  } for i in self.current_outbound_invitations()]
-        data.sort(key=lambda d: d["sent"], reverse=True)
-        return data
+        return invitation.pending_outbound_invitations(self.db)
 
     def control_getAddressBookJSONable(self):
         c = self.db.cursor()
