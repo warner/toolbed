@@ -68,9 +68,10 @@ function getAddressBook() {
               book.empty();
               for (var i=0; i<data.length; i++) {
                   var d = data[i];
-                  var h = $('<li />')
-                      .text(d.petname+" ("+d.key+")")
-                      .appendTo(book);
+                  var entry = $("#templates .address-book-entry").clone();
+                  entry.find(".name").text(d.petname);
+                  entry.find(".icon").append($("img").attr("src", d.icon_data));
+                  book.append(entry);
               }
           });
 };
