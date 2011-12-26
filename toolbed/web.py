@@ -141,6 +141,8 @@ class API(resource.Resource):
             data = self.client.control_getOutboundInvitationsJSONable()
         elif method == "getAddressBook":
             data = self.client.control_getAddressBookJSONable()
+        elif method == "deleteAddressBookEntry":
+            self.client.control_deleteAddressBookEntry(str(r["args"]["petname"]))
         elif method == "sendMessage":
             self.client.control_sendMessage(r["args"])
         elif method == "startInvitation":

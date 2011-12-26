@@ -208,6 +208,11 @@ class Client(service.MultiService):
                   }
                 for row in c.fetchall()]
         return data
+    def control_deleteAddressBookEntry(self, petname):
+        c = self.db.cursor()
+        c.execute("DELETE FROM `addressbook` WHERE `petname`=?", (petname,))
+        self.db.commit()
+        self.notify("address-book-changed", None)
 
     def control_subscribe_events(self, subscriber):
         self.subscribers[subscriber] = None

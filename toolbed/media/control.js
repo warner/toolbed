@@ -61,6 +61,11 @@ function profileDropIcon(e, ui) {
     return false;
 };
 
+function deleteAddressBookEntry(e) {
+    var d = $(this).parent().data("entry");
+    doAPI("deleteAddressBookEntry", {petname: d.petname});
+};
+
 function getAddressBook() {
     doAPI("getAddressBook", {},
           function (data) {
@@ -70,7 +75,9 @@ function getAddressBook() {
                   var d = data[i];
                   var entry = $("#templates .address-book-entry").clone();
                   entry.find(".name").text(d.petname);
-                  entry.find(".icon").append($("img").attr("src", d.icon_data));
+                  entry.find(".icon").attr("src", d.icon_data);
+                  entry.data("entry", d);
+                  entry.find(".delete").on("click", deleteAddressBookEntry);
                   book.append(entry);
               }
           });
@@ -170,7 +177,6 @@ $(function() {
                            }
                            else if (ui.index == 2) {
                                getPendingInvitations();
-                               getAddressBook();
                            }
                            return true;
                        }
@@ -196,7 +202,7 @@ $(function() {
       $("#profile-open-icon-uploader")
           .on({click: function(e) {
                    $("#profile-icon-upload").click();
-                   },
+                   }
                });
 
       $("#profile-icon-drop")
@@ -230,6 +236,8 @@ $(function() {
                                                           "connected" :
                                                           "not connected");
                                });
+      getAddressBook();
+      $("#address-book-reload").on("click", getAddressBook);
       evt.addEventListener("address-book-changed", getAddressBook);
       evt.addEventListener("invitations-changed", getPendingInvitations);
 });
