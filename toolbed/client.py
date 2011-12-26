@@ -89,7 +89,7 @@ class Client(service.MultiService):
 
     def message_received(self, p, messages):
         assert str(messages[0]) == "send"
-        #assert to == self.vk_s
+        to = str(messages[1])
         print "MSG", str(messages[2])
 
         c = self.db.cursor()
@@ -97,6 +97,8 @@ class Client(service.MultiService):
         self._check_rows(messages, c.fetchall(), invitation.process_outbound)
         c.execute("SELECT * FROM `inbound_invitations`")
         self._check_rows(messages, c.fetchall(), invitation.process_inbound)
+        if to == self.vk_s:
+            print "buddy message", messages
 
     def _check_rows(self, messages, rows, process):
         to = str(messages[1])
@@ -159,6 +161,7 @@ class Client(service.MultiService):
                    # TODO: passing the icon as a data: URL is probably an
                    # attack vector, change it to just pass the data and have
                    # the client add the "data:" prefix
+                   "my-address": self.vk_s,
                    }
         forward_payload_data = json.dumps(payload).encode("utf-8")
         invitation.create_outbound(self.db, petname, forward_payload_data)
@@ -187,6 +190,7 @@ class Client(service.MultiService):
         print "acceptInvitation", petname, code_ascii
         payload = {"my-name": self.control_getProfileName(),
                    "my-icon": self.control_getProfileIcon(), # see above
+                   "my-address": self.vk_s,
                    }
         reverse_payload_data = json.dumps(payload).encode("utf-8")
         outmsgs = invitation.accept_invitation(self.db,
