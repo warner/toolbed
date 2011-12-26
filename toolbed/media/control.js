@@ -18,6 +18,12 @@ function fill_val(method, element) {
     doAPI(method, {}, function(data) { $(element).val(data.text); });
 };
 
+function hshow(element) {
+    $(element).show("slide", {direction: "horizontal"});
+};
+function hhide(element) {
+    $(element).hide("slide", {direction: "horizontal"});
+};
 function htoggle(element) {
     $(element).toggle("slide", {direction: "horizontal"});
 };
@@ -194,8 +200,8 @@ $(function() {
                                       if (e.keyCode == 13) {
                                           profileSetName();
                                           e.target.blur();
-                                          htoggle("#profile-name-input");
-                                          htoggle("#profile-name");
+                                          hhide("#profile-name-input");
+                                          hshow("#profile-name");
                                       }
                                       return false;
                                   });
