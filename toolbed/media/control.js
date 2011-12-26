@@ -87,6 +87,7 @@ function getAddressBook() {
                   book.append(entry);
               }
           });
+    return false;
 };
 
 
@@ -195,6 +196,7 @@ $(function() {
       $("#profile-name-open-input").on("click", function(e) {
                                            htoggle("#profile-name-input");
                                            htoggle("#profile-name");
+                                           return false;
                                        });
       $("#profile-name-input").on("keyup", function(e) {
                                       if (e.keyCode == 13) {
@@ -208,6 +210,7 @@ $(function() {
       $("#profile-open-icon-uploader")
           .on({click: function(e) {
                    $("#profile-icon-upload").click();
+                   return false;
                    }
                });
 
