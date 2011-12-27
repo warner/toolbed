@@ -67,6 +67,14 @@ function profileDropIcon(e, ui) {
     return false;
 };
 
+function selectAddressBookEntry(e) {
+    var d = $(this).data("entry");
+    $("#address-book-petname").text(d.petname);
+    $("#address-book-icon").attr("src", d.icon_data);
+    $("#address-book-selfname").text(d.selfname);
+    return false;
+};
+
 function deleteAddressBookEntry(e) {
     var d = $(this).parent().data("entry");
     doAPI("deleteAddressBookEntry", {petname: d.petname});
@@ -79,12 +87,18 @@ function getAddressBook() {
               book.empty();
               for (var i=0; i<data.length; i++) {
                   var d = data[i];
+                  var entry = $("<li>");
+                  entry.text(d.petname);
+                  entry.data("entry", d);
+                  entry.on("click", selectAddressBookEntry);
+                  book.append(entry);
+                  /*
                   var entry = $("#templates .address-book-entry").clone();
                   entry.find(".name").text(d.petname);
                   entry.find(".icon").attr("src", d.icon_data);
                   entry.data("entry", d);
                   entry.find(".delete").on("click", deleteAddressBookEntry);
-                  book.append(entry);
+                  book.append(entry); */
               }
           });
     return false;

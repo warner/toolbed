@@ -60,29 +60,48 @@
     </ul>
   </div>
   <div id="tabs-address-book">
+    <h3>Address Book
+      <span class="small"><a id="address-book-reload" href="#">reload</a></span>
+    </h3>
 
-    <h3 id="toggle-pending-invitations" class="hidden"><a href="#">Pending Invitations
-    (<span id="count-pending-invitations">?</span>)</a></h3>
-    <div id="pending-invitations" class="hidden"><ul/>
+    <div id="address-book-controls">
+      <h3 id="toggle-pending-invitations" class="hidden"><a href="#">Pending Invitations
+      (<span id="count-pending-invitations">?</span>)</a></h3>
+      <div id="pending-invitations" class="hidden"><ul/></div>
+
+      <h3 id="invite"><input type="submit" value="Invite a Friend"/></h3>
+      <div id="invite-prepare-invitation" class="hidden">
+        <p>prepare to invite someone here</p>
+          <ul>
+            <li>Name: <input id="invite-to" type="text"/>
+            <input id="send-invitation"  type="submit" value="Send!"/>
+            <a id="invite-cancel" class="small" href="#">cancel</a>
+            </li>
+          </ul>
+      </div>
     </div>
 
-    <h3 id="invite"><input type="submit" value="Invite a Friend"/></h3>
-    <div id="invite-prepare-invitation" class="hidden">
-      <p>prepare to invite someone here</p>
-        <ul>
-          <li>Name: <input id="invite-to" type="text"/>
-          <input id="send-invitation"  type="submit" value="Send!"/>
-          <a id="invite-cancel" class="small" href="#">cancel</a>
-          </li>
-        </ul>
+    <div id="address-book-main">
+      <div id="address-book-body">
+        <div>
+          <img id="address-book-icon" src="">
+          <span class="address-book-icon-right">
+            <span class="gray">Petname:</span>
+            <span id="address-book-petname"></span>
+          </span>
+        </div>
+        <div class="address-book-attributes">
+          <span class="gray">Selfname:</span>
+          <span id="address-book-selfname"></span>
+        </div>
+      </div>
+      <div id="address-book-sidebar">
+        <ul id="address-book"></ul>
+      </div>
     </div>
-
-    <h3>Address Book</h3>
-    <h5><a id="address-book-reload" href="#">reload</a></h5>
-    <ul id="address-book">
-    </ul>
 
   </div>
+
   <div id="tabs-invitations">
     <ul>
       <li>Their Name: <input id="invite-from" type="text"/></li>
