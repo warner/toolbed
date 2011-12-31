@@ -18,6 +18,11 @@ CREATE TABLE `webui_initial_nonces`
  `nonce` STRING
 );
 
+CREATE TABLE `webui_access_tokens`
+(
+ `token` STRING
+);
+
 CREATE TABLE `relay_config` -- contains one row
 (
  `relayport` STRING

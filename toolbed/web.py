@@ -80,9 +80,9 @@ class ClientEventsProtocol(SSEProtocol):
         self.sendEvent(data, name=what)
 
 class Events(SSEResource):
-    def __init__(self, tokens, db, client):
+    def __init__(self, control, db, client):
         SSEResource.__init__(self)
-        self.tokens = tokens
+        self.control = control
         self.db = db
         self.client = client
 
@@ -91,22 +91,22 @@ class Events(SSEResource):
 
     def render_GET(self, request):
         token = request.args["token"][0]
-        if token not in self.tokens:
+        if token not in self.control.get_tokens():
             request.setHeader("content-type", "text/plain")
             return ("Sorry, this session token is expired,"
                     " please run 'tool open' again\n")
         return SSEResource.render_GET(self, request)
 
 class API(resource.Resource):
-    def __init__(self, tokens, db, client):
+    def __init__(self, control, db, client):
         resource.Resource.__init__(self)
-        self.tokens = tokens
+        self.control = control
         self.db = db
         self.client = client
 
     def render_POST(self, request):
         r = json.loads(request.content.read())
-        if not r["token"] in self.tokens:
+        if not r["token"] in self.control.get_tokens():
             request.setResponseCode(http.UNAUTHORIZED, "bad token")
             return "Invalid token"
         method = str(r["method"])
@@ -165,7 +165,11 @@ class Control(resource.Resource):
     def __init__(self, db):
         resource.Resource.__init__(self)
         self.db = db
-        self.tokens = set()
+
+    def get_tokens(self):
+        c = self.db.cursor()
+        c.execute("SELECT `token` FROM `webui_access_tokens`")
+        return set([str(row[0]) for row in c.fetchall()])
 
     def render_GET(self, request):
         request.setHeader("content-type", "text/plain")
@@ -180,16 +184,17 @@ class Control(resource.Resource):
                     " please run 'tool open' again\n")
         # good nonce, single-use
         c.execute("DELETE FROM webui_initial_nonces WHERE nonce=?", (nonce,))
-        self.db.commit()
-        # this token lasts as long as the node is running
+        # this token lasts as long as the node is running: it is cleared at
+        # startup
         token = make_nonce()
-        self.tokens.add(token)
+        c.execute("INSERT INTO `webui_access_tokens` VALUES (?)", (token,))
+        self.db.commit()
         request.setHeader("content-type", "text/html")
         return read_media("login.html") % token
 
     def render_POST(self, request):
         token = request.args["token"][0]
-        if token not in self.tokens:
+        if token not in self.get_tokens():
             request.setHeader("content-type", "text/plain")
             return ("Sorry, this session token is expired,"
                     " please run 'tool open' again\n")
@@ -217,10 +222,12 @@ class WebPort(service.MultiService):
             r.putChild("api", rapi)
             root.putChild("relay", r)
         if node.client:
+            self.db.cursor().execute("DELETE FROM `webui_access_tokens`")
+            self.db.commit()
             c = Control(db)
-            capi = API(c.tokens, db, node.client)
+            capi = API(c, db, node.client)
             c.putChild("api", capi)
-            client_events = Events(c.tokens, db, node.client)
+            client_events = Events(c, db, node.client)
             c.putChild("events", client_events)
             root.putChild("control", c)
 
