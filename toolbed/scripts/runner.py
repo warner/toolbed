@@ -59,6 +59,17 @@ class OpenOptions(BasedirParameterMixin, BasedirArgument, usage.Options):
         ("no-open", "n", "Don't open webbrowser, just show URL"),
         ]
 
+class InviteOptions(BasedirParameterMixin, usage.Options):
+    #("petname", "n", None, "Petname for the person being invited"),
+    def parseArgs(self, petname):
+        self["petname"] = petname
+
+class AcceptOptions(BasedirParameterMixin, usage.Options):
+    #("petname", "n", None, "Petname for the person making the invitation"),
+    def parseArgs(self, petname, invitation_code):
+        self["petname"] = petname
+        self["invitation_code"] = invitation_code
+
 class TestOptions(usage.Options):
     def parseArgs(self, *test_args):
         if not test_args:
@@ -78,6 +89,9 @@ class Options(usage.Options):
                    ("stop", None, StopNodeOptions, "Stop a node"),
                    ("restart", None, RestartNodeOptions, "Restart a node"),
                    ("open", None, OpenOptions, "Open web control panel"),
+
+                   ("invite", None, InviteOptions, "Create an Invitation"),
+                   ("accept", None, AcceptOptions, "Accept an Invitation"),
 
                    ("create-relay", None, CreateRelayOptions, "Create a relay"),
                    ("test", None, TestOptions, "Run unit tests"),
@@ -125,6 +139,14 @@ def test(so, stdout, stderr):
     #unittest.main(module="toolbed.test.test_netstrings", argv=args)
     sys.exit(0) # just in case
 
+def invite(*args):
+    from .create_invitation import create_invitation
+    return create_invitation(*args)
+
+def accept(*args):
+    from .accept_invitation import accept_invitation
+    return accept_invitation(*args)
+
 DISPATCH = {"create-node": create_node,
             "start": start,
             "stop": stop,
@@ -132,6 +154,9 @@ DISPATCH = {"create-node": create_node,
             "open": open_control_panel,
             "create-relay": create_relay,
             "test": test,
+
+            "invite": invite,
+            "accept": accept,
             }
 
 def run(args, stdout, stderr):

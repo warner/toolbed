@@ -38,6 +38,7 @@ def create_outbound(db, petname, forward_payload):
               (address, sent, expires, petname, code_ascii, stage,
                forward_payload, ""))
     db.commit()
+    return {"code": code_ascii}
 
 def process_outbound(db, row, h, msg):
     petname = str(row[3])

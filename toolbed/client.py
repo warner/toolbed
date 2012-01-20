@@ -164,10 +164,12 @@ class Client(service.MultiService):
                    "my-address": self.vk_s,
                    }
         forward_payload_data = json.dumps(payload).encode("utf-8")
-        invitation.create_outbound(self.db, petname, forward_payload_data)
+        invite = invitation.create_outbound(self.db, petname,
+                                            forward_payload_data)
         self.subscribe_to_all_pending_invitations()
         # when this XHR returns, the JS client will fetch the pending
         # invitation list and show the most recent entry
+        return invite
 
     def subscribe_to_all_pending_invitations(self):
         for addr in invitation.addresses_to_subscribe(self.db):

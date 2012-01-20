@@ -148,13 +148,13 @@ class API(resource.Resource):
         elif method == "startInvitation":
             self.client.control_startInvitation(r["args"])
         elif method == "sendInvitation":
-            self.client.control_sendInvitation(str(r["args"]["name"]))
+            data = self.client.control_sendInvitation(str(r["args"]["name"]))
         elif method == "cancelInvitation":
             self.client.control_cancelInvitation(r["args"])
         elif method == "acceptInvitation":
             self.client.control_acceptInvitation(str(r["args"]["name"]),
                                                  str(r["args"]["code"]))
-
+            text = "process started"
         else:
             raise ValueError("Unknown method '%s'" % method)
         if data is not None:
