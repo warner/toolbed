@@ -68,8 +68,8 @@ class FakeClient(Client):
     def message_received(self, fromwho, messages):
         Client.message_received(self, fromwho, messages)
         self.log.append((fromwho, messages))
-    def add_addressbook_entry(self, petname, data):
-        self.book.append( (petname,json.loads(data)) )
+    def add_addressbook_entry(self, petname, data, localdata):
+        self.book.append( (petname,json.loads(data),json.loads(localdata)) )
 
 class Roundtrip(unittest.TestCase):
     def mkfile(self, *names):
@@ -129,9 +129,31 @@ class Roundtrip(unittest.TestCase):
         # all protocol messages complete inside this call
         c2.control_acceptInvitation("pet-alice", code_ascii)
 
-        self.failUnlessEqual(c1.book,
-                             [("pet-bob", {"my-name": "bob",
-                                           "my-icon": "bob-icon"})])
-        self.failUnlessEqual(c2.book,
-                             [("pet-alice", {"my-name": "alice",
-                                             "my-icon": "alice-icon"})])
+        self.failUnlessEqual(len(c1.book), 1)
+        self.failUnlessEqual(c1.book[0][0], "pet-bob")
+        d1 = c1.book[0][1]
+        self.failUnlessEqual(sorted(d1.keys()),
+                             sorted(["my-name", "my-icon", "my-pubkey"]))
+        self.failUnlessEqual(d1["my-name"], "bob")
+        self.failUnlessEqual(d1["my-icon"], "bob-icon")
+        k1 = d1["my-pubkey"]
+        d2 = c1.book[0][2]
+        self.failUnlessEqual(sorted(d2.keys()),
+                             sorted(["my-pubkey", "my-privkey"]))
+        k2 = d2["my-pubkey"]
+
+        self.failUnlessEqual(len(c2.book), 1)
+        self.failUnlessEqual(c2.book[0][0], "pet-alice")
+        d3 = c2.book[0][1]
+        self.failUnlessEqual(sorted(d3.keys()),
+                             sorted(["my-name", "my-icon", "my-pubkey"]))
+        self.failUnlessEqual(d3["my-name"], "alice")
+        self.failUnlessEqual(d3["my-icon"], "alice-icon")
+        k3 = d3["my-pubkey"]
+        d4 = c2.book[0][2]
+        self.failUnlessEqual(sorted(d4.keys()),
+                             sorted(["my-pubkey", "my-privkey"]))
+        k4 = d4["my-pubkey"]
+
+        self.failUnlessEqual(k1, k4)
+        self.failUnlessEqual(k2, k3)

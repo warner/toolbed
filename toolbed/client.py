@@ -6,8 +6,9 @@ from twisted.application import service
 from twisted.python import log
 from twisted.internet import protocol, reactor
 from twisted.protocols import basic
+import nacl
 from .netstring import make_netstring, split_netstrings
-from . import invitation
+from . import invitation, util
 
 class Connection(basic.NetstringReceiver):
     def stringReceived(self, msg):
@@ -108,14 +109,20 @@ class Client(service.MultiService):
                 for outmsg in outmsgs:
                     self.send_message_to_relay(*outmsg)
                 if newentry:
-                    petname, payload_data = newentry
-                    self.add_addressbook_entry(petname, payload_data)
+                    petname, reverse_payload_data, local_payload_data = newentry
+                    self.add_addressbook_entry(petname, reverse_payload_data,
+                                               local_payload_data)
 
-    def add_addressbook_entry(self, petname, payload_data):
-        data = json.loads(payload_data.decode("utf-8"))
+    def add_addressbook_entry(self, petname, reverse_payload_data,
+                              local_payload_data):
+        data = json.loads(reverse_payload_data.decode("utf-8"))
+        local_data = json.loads(local_payload_data.decode("utf-8"))
         c = self.db.cursor()
-        c.execute("INSERT INTO `addressbook` VALUES (?,?,?)",
-                  (petname, data["my-name"], data["my-icon"]))
+        c.execute("INSERT INTO `addressbook` VALUES (?,?,?, ?,?, ?)",
+                  (petname, data["my-name"], data["my-icon"],
+                   local_data["my-privkey"], local_data["my-pubkey"],
+                   data["my-pubkey"]
+                   ))
         self.db.commit()
         self.notify("invitations-changed", None)
         self.notify("address-book-changed", None)
@@ -149,6 +156,12 @@ class Client(service.MultiService):
         msg_body = str(args["message"])
         self.send_message_to_relay("send", msg_to, msg_body)
 
+    def create_keypair(self):
+        pk, sk = nacl.crypto_box_keypair()
+        pk_s = util.to_ascii(pk, "pk0-", encoding="base32")
+        sk_s = util.to_ascii(sk, "sk0-", encoding="base32")
+        return pk_s, sk_s
+
     def control_startInvitation(self, args):
         print "startInvitation"
 
@@ -156,16 +169,20 @@ class Client(service.MultiService):
         # in the medium-size code protocol, the invitation code I is just a
         # random string.
         print "sendInvitation", petname
+        pk_s, sk_s = self.create_keypair()
         payload = {"my-name": self.control_getProfileName(),
                    "my-icon": self.control_getProfileIcon(),
                    # TODO: passing the icon as a data: URL is probably an
                    # attack vector, change it to just pass the data and have
                    # the client add the "data:" prefix
-                   "my-address": self.vk_s,
+                   "my-pubkey": pk_s,
                    }
         forward_payload_data = json.dumps(payload).encode("utf-8")
+        local_payload = {"my-pubkey": pk_s, "my-privkey": sk_s}
+        local_payload_data = json.dumps(local_payload).encode("utf-8")
         invite = invitation.create_outbound(self.db, petname,
-                                            forward_payload_data)
+                                            forward_payload_data,
+                                            local_payload_data)
         self.subscribe_to_all_pending_invitations()
         # when this XHR returns, the JS client will fetch the pending
         # invitation list and show the most recent entry
@@ -190,14 +207,18 @@ class Client(service.MultiService):
 
     def control_acceptInvitation(self, petname, code_ascii):
         print "acceptInvitation", petname, code_ascii
+        pk_s, sk_s = self.create_keypair()
         payload = {"my-name": self.control_getProfileName(),
                    "my-icon": self.control_getProfileIcon(), # see above
-                   "my-address": self.vk_s,
+                   "my-pubkey": pk_s,
                    }
         reverse_payload_data = json.dumps(payload).encode("utf-8")
+        local_payload = {"my-pubkey": pk_s, "my-privkey": sk_s}
+        local_payload_data = json.dumps(local_payload).encode("utf-8")
         outmsgs = invitation.accept_invitation(self.db,
                                                petname, code_ascii,
-                                               reverse_payload_data)
+                                               reverse_payload_data,
+                                               local_payload_data)
         for outmsg in outmsgs:
             self.send_message_to_relay(*outmsg)
 

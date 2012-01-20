@@ -60,8 +60,15 @@ CREATE TABLE `outbound_invitations`
  `petname` STRING,
  `code` STRING, -- invitation code (sent to recipient)
  `stage` INTEGER,
- `forward_payload` STRING, -- our addressbook entry for them
- `reverse_payload` STRING -- their addressbook entry for us
+ -- forward_payload describes us, and is sent to them, to be added to their
+ -- address book
+ `forward_payload` STRING,
+ -- reverse_payload comes from them. It describes them, to be added to our
+ -- address book.
+ `reverse_payload` STRING,
+ -- private data we'll add to our addressbook entry for them, merged with
+ -- reverse_payload
+ `local_payload` STRING
 );
 
 -- inbound invitations are created when M0 is pasted in by the user and M1 is
@@ -73,12 +80,16 @@ CREATE TABLE `inbound_invitations`
 (
  `address` STRING, -- our address
  `petname` STRING,
- `code` STRING
+ `code` STRING,
+ `local_payload` STRING
 );
 
 CREATE TABLE `addressbook`
 (
  `petname` STRING,
  `selfname` STRING,
- `icon_data` STRING
+ `icon_data` STRING,
+ `my_privkey` STRING,
+ `my_pubkey` STRING,
+ `their_pubkey` STRING
 );

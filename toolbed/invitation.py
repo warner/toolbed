@@ -26,7 +26,7 @@ def unpack_messages(code_ascii, h, msg):
     return messages
 
 
-def create_outbound(db, petname, forward_payload):
+def create_outbound(db, petname, forward_payload, local_payload):
     sent = time.time()
     expires = sent+24*60*60
     code_ascii = b2a(os.urandom(256/8))
@@ -34,9 +34,9 @@ def create_outbound(db, petname, forward_payload):
     stage = 0
     c = db.cursor()
     c.execute("INSERT INTO `outbound_invitations`"
-              " VALUES (?,?,?,?,?,?, ?,?)",
+              " VALUES (?,?,?,?,?,?, ?,?,?)",
               (address, sent, expires, petname, code_ascii, stage,
-               forward_payload, ""))
+               forward_payload, "", local_payload))
     db.commit()
     return {"code": code_ascii}
 
@@ -46,6 +46,7 @@ def process_outbound(db, row, h, msg):
     stage = int(row[5])
     forward_payload = str(row[6])
     reverse_payload = str(row[7])
+    local_payload = str(row[8])
 
     outmsgs = []
     newentry = None
@@ -70,7 +71,7 @@ def process_outbound(db, row, h, msg):
         msgnum, = messages
         if msgnum != "3":
             raise ValueError("unexpected message number")
-        newentry = (petname, reverse_payload)
+        newentry = (petname, reverse_payload, local_payload)
         c.execute("DELETE FROM `outbound_invitations`"
                   " WHERE `petname`=? and `code`=?",
                   (petname, code_ascii))
@@ -90,11 +91,12 @@ def pending_outbound_invitations(db):
     data.sort(key=lambda d: d["sent"], reverse=True)
     return data
 
-def accept_invitation(db, petname, code_ascii, reverse_payload):
+def accept_invitation(db, petname, code_ascii, reverse_payload, local_payload):
     receiver_address = "channel-"+b2a(os.urandom(256/8))
     c = db.cursor()
-    c.execute("INSERT INTO `inbound_invitations` VALUES (?,?,?)",
-              (receiver_address, petname, code_ascii))
+    c.execute("INSERT INTO `inbound_invitations` VALUES (?,?,?, ?)",
+              (receiver_address, petname, code_ascii,
+               local_payload))
     db.commit()
     outmsgs = []
     outmsgs.append( ("subscribe", receiver_address) )
@@ -105,13 +107,14 @@ def accept_invitation(db, petname, code_ascii, reverse_payload):
 def process_inbound(db, row, h, msg):
     petname = str(row[1])
     code_ascii = str(row[2])
+    local_payload = str(row[3])
     messages = unpack_messages(code_ascii, h, msg)
     # We're created by M0, so we only have one stage here. We expect M2:
     # (2,B[alice]), and respond with M3 (the ACK)
     msgnum,forward_payload = messages
     if msgnum != "2":
         raise ValueError("unexpected message number")
-    newentry = (petname, forward_payload)
+    newentry = (petname, forward_payload, local_payload)
     c = db.cursor()
     c.execute("DELETE FROM `inbound_invitations`"
               " WHERE `petname`=? AND `code`=?",
