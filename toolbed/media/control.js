@@ -72,6 +72,7 @@ function selectAddressBookEntry(e) {
     $("#address-book-petname").text(d.petname);
     $("#address-book-icon").attr("src", d.icon_data);
     $("#address-book-selfname").text(d.selfname);
+    $("#address-book-their-pubkey").text(d.their_pubkey);
     return false;
 };
 

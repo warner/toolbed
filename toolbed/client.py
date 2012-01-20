@@ -227,11 +227,13 @@ class Client(service.MultiService):
 
     def control_getAddressBookJSONable(self):
         c = self.db.cursor()
-        c.execute("SELECT `petname`,`selfname`,`icon_data` FROM `addressbook`"
+        c.execute("SELECT `petname`,`selfname`,`icon_data`,`their_pubkey`"
+                  " FROM `addressbook`"
                   " ORDER BY `petname` ASC")
         data = [{ "petname": str(row[0]),
                   "selfname": str(row[1]),
                   "icon_data": str(row[2]),
+                  "their_pubkey": str(row[3]),
                   }
                 for row in c.fetchall()]
         return data
