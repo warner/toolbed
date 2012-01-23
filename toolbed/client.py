@@ -222,6 +222,12 @@ class Client(service.MultiService):
         for outmsg in outmsgs:
             self.send_message_to_relay(*outmsg)
 
+    def control_sendMessage(self, petname, message):
+        c = self.db.cursor()
+        c.execute("SELECT `their_pubkey`"
+                  " FROM `addressbook`"
+                  " WHERE `petname`=?"
+
     def control_getOutboundInvitationsJSONable(self):
         return invitation.pending_outbound_invitations(self.db)
 

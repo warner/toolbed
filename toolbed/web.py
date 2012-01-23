@@ -155,6 +155,10 @@ class API(resource.Resource):
             self.client.control_acceptInvitation(str(r["args"]["name"]),
                                                  str(r["args"]["code"]))
             text = "process started"
+        elif method == "sendMessage":
+            self.client.control_sendMessage(str(r["args"]["name"]),
+                                            str(r["args"]["message"]))
+            text = "process started"
         else:
             raise ValueError("Unknown method '%s'" % method)
         if data is not None:

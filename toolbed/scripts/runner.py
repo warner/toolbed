@@ -82,6 +82,11 @@ class TestOptions(usage.Options):
         else:
             self.test_args = ["-v"] + list(test_args)
 
+class SendOptions(BasedirParameterMixin, usage.Options):
+    def parseArgs(self, petname, message):
+        self["petname"] = petname
+        self["message"] = message
+
 class Options(usage.Options):
     synopsis = "\nUsage: tool <command>"
     subCommands = [("create-node", None, CreateNodeOptions, "Create a node"),
@@ -92,6 +97,8 @@ class Options(usage.Options):
 
                    ("invite", None, InviteOptions, "Create an Invitation"),
                    ("accept", None, AcceptOptions, "Accept an Invitation"),
+
+                   ("send", None, SendOptions, "Send someone a message"),
 
                    ("create-relay", None, CreateRelayOptions, "Create a relay"),
                    ("test", None, TestOptions, "Run unit tests"),
@@ -147,6 +154,11 @@ def accept(*args):
     from .accept_invitation import accept_invitation
     return accept_invitation(*args)
 
+
+def send(*args):
+    from .messages import send_message
+    return send_message(*args)
+
 DISPATCH = {"create-node": create_node,
             "start": start,
             "stop": stop,
@@ -157,6 +169,8 @@ DISPATCH = {"create-node": create_node,
 
             "invite": invite,
             "accept": accept,
+
+            "send": send,
             }
 
 def run(args, stdout, stderr):
