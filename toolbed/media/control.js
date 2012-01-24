@@ -30,7 +30,7 @@ function htoggle(element) {
 
 function sendMessage(event) {
     console.log("sendMessage");
-    var args = {to: $("#message-to").val(),
+    var args = {name: $("#message-to").val(),
                 message: $("#message-message").val()
                };
     doAPI("sendMessage", args, function(){alert("Sent!");});

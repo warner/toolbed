@@ -89,7 +89,9 @@ CREATE TABLE `addressbook`
  `petname` STRING,
  `selfname` STRING,
  `icon_data` STRING,
- `my_privkey` STRING,
- `my_pubkey` STRING,
- `their_pubkey` STRING
+ `my_privkey` STRING, -- sk0-base32
+ `my_pubkey` STRING, -- pk0-base32
+ `their_pubkey` STRING, -- pk0-base32
+ `outbound_nonce` INTEGER, -- higher pubkey gets even, lower gets odd
+ `minimum_inbound_nonce` INTEGER
 );

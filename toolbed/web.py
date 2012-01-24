@@ -144,7 +144,9 @@ class API(resource.Resource):
         elif method == "deleteAddressBookEntry":
             self.client.control_deleteAddressBookEntry(str(r["args"]["petname"]))
         elif method == "sendMessage":
-            self.client.control_sendMessage(r["args"])
+            self.client.control_sendMessage(str(r["args"]["name"]),
+                                            str(r["args"]["message"]))
+            text = "process started"
         elif method == "startInvitation":
             self.client.control_startInvitation(r["args"])
         elif method == "sendInvitation":
@@ -154,10 +156,6 @@ class API(resource.Resource):
         elif method == "acceptInvitation":
             self.client.control_acceptInvitation(str(r["args"]["name"]),
                                                  str(r["args"]["code"]))
-            text = "process started"
-        elif method == "sendMessage":
-            self.client.control_sendMessage(str(r["args"]["name"]),
-                                            str(r["args"]["message"]))
             text = "process started"
         else:
             raise ValueError("Unknown method '%s'" % method)

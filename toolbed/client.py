@@ -1,7 +1,9 @@
+import os
 import re
 import collections
 import weakref
 import json
+import binascii
 from twisted.application import service
 from twisted.python import log
 from twisted.internet import protocol, reactor
@@ -117,12 +119,19 @@ class Client(service.MultiService):
                               local_payload_data):
         data = json.loads(reverse_payload_data.decode("utf-8"))
         local_data = json.loads(local_payload_data.decode("utf-8"))
+        my_pubkey = local_data["my-pubkey"]
+        their_pubkey = data["my-pubkey"]
+        if my_pubkey > their_pubkey:
+            outbound_nonce = 0 # higher pubkey gets even
+            minimum_inbound_nonce = 1
+        else:
+            outbound_nonce = 1 # lower pubkey gets odd
+            minimum_inbound_nonce = 0
         c = self.db.cursor()
-        c.execute("INSERT INTO `addressbook` VALUES (?,?,?, ?,?, ?)",
+        c.execute("INSERT INTO `addressbook` VALUES (?,?,?, ?,?, ?, ?,?)",
                   (petname, data["my-name"], data["my-icon"],
-                   local_data["my-privkey"], local_data["my-pubkey"],
-                   data["my-pubkey"]
-                   ))
+                   local_data["my-privkey"], my_pubkey, their_pubkey,
+                   outbound_nonce, minimum_inbound_nonce))
         self.db.commit()
         self.notify("invitations-changed", None)
         self.notify("address-book-changed", None)
@@ -149,12 +158,6 @@ class Client(service.MultiService):
         c = self.db.cursor()
         c.execute("UPDATE `client_profile` SET `icon_data`=?", (icon_data,))
         self.db.commit()
-
-    def control_sendMessage(self, args):
-        print "SENDMESSAGE", args
-        msg_to = str(args["to"])
-        msg_body = str(args["message"])
-        self.send_message_to_relay("send", msg_to, msg_body)
 
     def create_keypair(self):
         pk, sk = nacl.crypto_box_keypair()
@@ -222,11 +225,29 @@ class Client(service.MultiService):
         for outmsg in outmsgs:
             self.send_message_to_relay(*outmsg)
 
+    def make_nonce_string(self, counter):
+        random = os.urandom(12)
+        nonce_hex = "%s%024x" % (binascii.hexlify(random), counter)
+        return binascii.unhexlify(nonce_hex)
+
     def control_sendMessage(self, petname, message):
         c = self.db.cursor()
-        c.execute("SELECT `their_pubkey`"
+        c.execute("SELECT `my_privkey`, `their_pubkey`, `outbound_nonce`"
                   " FROM `addressbook`"
-                  " WHERE `petname`=?"
+                  " WHERE `petname`=?", (petname,))
+        (my_privkey_s, their_pubkey_s, outbound_nonce) = c.fetchone()
+        my_privkey = util.from_ascii(my_privkey_s, "sk0-", encoding="base32")
+        their_pubkey = util.from_ascii(their_pubkey_s, "pk0-", encoding="base32")
+        c.execute("UPDATE `addressbook`"
+                  " SET `outbound_nonce`=?"
+                  " WHERE `my_privkey`=? AND `their_pubkey`=?",
+                  (outbound_nonce+2, my_privkey_s, their_pubkey_s))
+        self.db.commit()
+        nonce_s = self.make_nonce_string(outbound_nonce)
+        boxed = nacl.crypto_box(str(message), nonce_s, their_pubkey, my_privkey)
+        print "BOXED", binascii.hexlify(boxed)
+        msg_to = binascii.hexlify(their_pubkey)
+        self.send_message_to_relay("send", msg_to, boxed)
 
     def control_getOutboundInvitationsJSONable(self):
         return invitation.pending_outbound_invitations(self.db)
