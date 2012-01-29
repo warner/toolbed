@@ -30,8 +30,7 @@ CREATE TABLE `relay_config` -- contains one row
 
 CREATE TABLE `client_config` -- contains one row
 (
- `privkey` STRING,
- `pubkey` STRING,
+ `address` STRING,
  `relay_location` STRING
 );
 
@@ -92,6 +91,7 @@ CREATE TABLE `addressbook`
  `my_privkey` STRING, -- sk0-base32
  `my_pubkey` STRING, -- pk0-base32
  `their_pubkey` STRING, -- pk0-base32
+ `their_address` STRING,
  `outbound_nonce` INTEGER, -- higher pubkey gets even, lower gets odd
  `minimum_inbound_nonce` INTEGER
 );

@@ -12,6 +12,9 @@ import nacl
 from .netstring import make_netstring, split_netstrings
 from . import invitation, util
 
+class StaleNonceError(Exception):
+    pass
+
 class Connection(basic.NetstringReceiver):
     def stringReceived(self, msg):
         try:
@@ -63,9 +66,9 @@ class Client(service.MultiService):
 
         self.subscribers = weakref.WeakKeyDictionary()
 
-        c.execute("SELECT `pubkey` FROM `client_config`");
-        self.vk_s = str(c.fetchone()[0])
-        self.send_message_to_relay("subscribe", self.vk_s)
+        c.execute("SELECT `address` FROM `client_config`");
+        self.my_address = str(c.fetchone()[0])
+        self.send_message_to_relay("subscribe", self.my_address)
 
     def startService(self):
         service.MultiService.startService(self)
@@ -100,8 +103,9 @@ class Client(service.MultiService):
         self._check_rows(messages, c.fetchall(), invitation.process_outbound)
         c.execute("SELECT * FROM `inbound_invitations`")
         self._check_rows(messages, c.fetchall(), invitation.process_inbound)
-        if to == self.vk_s:
+        if to == self.my_address:
             print "buddy message", messages
+            self._receive_message(messages[2:])
 
     def _check_rows(self, messages, rows, process):
         to = str(messages[1])
@@ -115,6 +119,34 @@ class Client(service.MultiService):
                     self.add_addressbook_entry(petname, reverse_payload_data,
                                                local_payload_data)
 
+    def _receive_message(self, messages):
+        their_pubkey_s, nonce_s, boxed = messages[2:5]
+        c = self.db.cursor()
+        c.execute("SELECT `my_privkey`, `petname`, `minimum_inbound_nonce`"
+                  " FROM `addressbook` WHERE `their_pubkey`=?",
+                  (their_pubkey_s,))
+        (my_privkey_s, petname, minimum_inbound_nonce) = c.fetchone()
+        count = self._parse_nonce_bytes(nonce_s)
+        if count < minimum_inbound_nonce:
+            raise StaleNonceError()
+        my_privkey = util.from_ascii(my_privkey_s, "sk0-", encoding="base32")
+        # this raises ValueError when the MAC fails
+        msg = nacl.crypto_box_open(boxed, their_pubkey_s, my_privkey)
+        c.execute("UPDATE `addressbook`"
+                  " SET `minimum_inbound_nonce`=?"
+                  " WHERE `their_pubkey`=?",
+                  (count+2, their_pubkey_s))
+        self.db.commit()
+        self.messageReceived(their_pubkey_s, petname, msg)
+
+    def _parse_nonce_bytes(self, nonce):
+        assert len(nonce) == 24
+        counter = int(binascii.hexlify(nonce[12:]), 16)
+        return counter
+
+    def messageReceived(self, their_pubkey_s, petname, msg):
+        print "MSG RECEIVED (%s): %s" % (petname, msg)
+
     def add_addressbook_entry(self, petname, reverse_payload_data,
                               local_payload_data):
         data = json.loads(reverse_payload_data.decode("utf-8"))
@@ -127,10 +159,12 @@ class Client(service.MultiService):
         else:
             outbound_nonce = 1 # lower pubkey gets odd
             minimum_inbound_nonce = 0
+        their_address = data["my-address"]
         c = self.db.cursor()
-        c.execute("INSERT INTO `addressbook` VALUES (?,?,?, ?,?, ?, ?,?)",
+        c.execute("INSERT INTO `addressbook` VALUES (?,?,?, ?,?,?, ?, ?,?)",
                   (petname, data["my-name"], data["my-icon"],
                    local_data["my-privkey"], my_pubkey, their_pubkey,
+                   their_address,
                    outbound_nonce, minimum_inbound_nonce))
         self.db.commit()
         self.notify("invitations-changed", None)
@@ -178,6 +212,7 @@ class Client(service.MultiService):
                    # TODO: passing the icon as a data: URL is probably an
                    # attack vector, change it to just pass the data and have
                    # the client add the "data:" prefix
+                   "my-address": self.my_address,
                    "my-pubkey": pk_s,
                    }
         forward_payload_data = json.dumps(payload).encode("utf-8")
@@ -225,7 +260,7 @@ class Client(service.MultiService):
         for outmsg in outmsgs:
             self.send_message_to_relay(*outmsg)
 
-    def make_nonce_string(self, counter):
+    def make_nonce_bytes(self, counter):
         random = os.urandom(12)
         nonce_hex = "%s%024x" % (binascii.hexlify(random), counter)
         return binascii.unhexlify(nonce_hex)
@@ -233,9 +268,10 @@ class Client(service.MultiService):
     def control_sendMessage(self, petname, message):
         c = self.db.cursor()
         c.execute("SELECT `my_privkey`, `their_pubkey`, `outbound_nonce`"
+                  "       `their_address`"
                   " FROM `addressbook`"
                   " WHERE `petname`=?", (petname,))
-        (my_privkey_s, their_pubkey_s, outbound_nonce) = c.fetchone()
+        (my_privkey_s, their_pubkey_s, outbound_nonce, their_address) = c.fetchone()
         my_privkey = util.from_ascii(my_privkey_s, "sk0-", encoding="base32")
         their_pubkey = util.from_ascii(their_pubkey_s, "pk0-", encoding="base32")
         c.execute("UPDATE `addressbook`"
@@ -243,11 +279,11 @@ class Client(service.MultiService):
                   " WHERE `my_privkey`=? AND `their_pubkey`=?",
                   (outbound_nonce+2, my_privkey_s, their_pubkey_s))
         self.db.commit()
-        nonce_s = self.make_nonce_string(outbound_nonce)
-        boxed = nacl.crypto_box(str(message), nonce_s, their_pubkey, my_privkey)
+        nonce = self.make_nonce_bytes(outbound_nonce)
+        boxed = nacl.crypto_box(str(message), nonce, their_pubkey, my_privkey)
         print "BOXED", binascii.hexlify(boxed)
-        msg_to = binascii.hexlify(their_pubkey)
-        self.send_message_to_relay("send", msg_to, boxed)
+        msg_to = binascii.hexlify(their_address)
+        self.send_message_to_relay("send", msg_to, their_pubkey_s, nonce, boxed)
 
     def control_getOutboundInvitationsJSONable(self):
         return invitation.pending_outbound_invitations(self.db)

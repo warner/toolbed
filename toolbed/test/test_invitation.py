@@ -66,6 +66,7 @@ class FakeClient(Client):
             m = self.pending_messages.popleft()
             self.nexus.send(self, m)
     def message_received(self, fromwho, messages):
+        print "FCMR", messages
         Client.message_received(self, fromwho, messages)
         self.log.append((fromwho, messages))
     def add_addressbook_entry(self, petname, data, localdata):
@@ -106,7 +107,7 @@ class Roundtrip(unittest.TestCase):
     def test_contact(self):
         self.create_clients("invitation", "Roundtrip", "contact")
         c1,c2 = self.c1,self.c2
-        c1.send_message_to_relay("send", c2.vk_s, "hello")
+        c1.send_message_to_relay("send", c2.my_address, "hello")
         self.failUnlessEqual(len(c2.log), 1)
         self.failUnlessEqual(c2.log[-1][0], c1)
         self.failUnlessEqual(c2.log[-1][1], ["send", c2.vk_s, "hello"])
@@ -146,7 +147,7 @@ class Roundtrip(unittest.TestCase):
         self.failUnlessEqual(c2.book[0][0], "pet-alice")
         d3 = c2.book[0][1]
         self.failUnlessEqual(sorted(d3.keys()),
-                             sorted(["my-name", "my-icon", "my-pubkey"]))
+                             sorted(["my-name", "my-icon", "my-address", "my-pubkey"]))
         self.failUnlessEqual(d3["my-name"], "alice")
         self.failUnlessEqual(d3["my-icon"], "alice-icon")
         k3 = d3["my-pubkey"]
