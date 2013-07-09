@@ -26,3 +26,15 @@ bounce:
 	-./bin/tool restart c1
 	-./bin/tool restart c2
 
+# note: building pynacl requires swig to be installed. Both pynacl and
+# ed25519 require python-dev (headers).
+VIRTUALENV=virtualenv-1.9.1/virtualenv.py
+PIP=venv/bin/pip
+venv: Makefile support/virtualenv-1.9.1.tar.gz support/pynacl-minimal-6ef7f091.tar.gz support/python-ed25519-1.1.tar.gz
+	tar xf support/virtualenv-1.9.1.tar.gz
+	$(PYTHON) $(VIRTUALENV) --never-download --system-site-packages venv
+	$(PIP) install support/python-ed25519-1.1.tar.gz
+	$(PIP) install support/pynacl-minimal-6ef7f091.tar.gz
+
+clean:
+	-rm -rf venv virtualenv-1.9.1
