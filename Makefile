@@ -32,7 +32,9 @@ VIRTUALENV=virtualenv-1.9.1/virtualenv.py
 PIP=venv/bin/pip
 venv: Makefile support/virtualenv-1.9.1.tar.gz support/pynacl-minimal-6ef7f091.tar.gz support/python-ed25519-1.1.tar.gz
 	tar xf support/virtualenv-1.9.1.tar.gz
-	$(PYTHON) $(VIRTUALENV) --never-download --system-site-packages venv
+	$(PYTHON) $(VIRTUALENV) --never-download venv
+	$(PIP) install support/zope.interface-4.0.5.zip
+	$(PIP) install support/Twisted-13.1.0.tar.bz2
 	$(PIP) install support/python-ed25519-1.1.tar.gz
 	$(PIP) install support/pynacl-minimal-6ef7f091.tar.gz
 
