@@ -12,6 +12,7 @@ try:
 except ImportError:
     print >>sys.stderr, "Unable to import Twisted."
     print >>sys.stderr, "Please run 'python setup.py build'"
+    raise
     sys.exit(1)
 
 class BasedirParameterMixin:
@@ -179,4 +180,5 @@ def run(args, stdout, stderr):
         print >>stderr, "--- ImportError ---"
         print >>stderr, e
         print >>stderr, "Please run 'python setup.py build'"
+        raise
         return 1

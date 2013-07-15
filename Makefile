@@ -59,3 +59,22 @@ venv: Makefile support/virtualenv-1.9.1.tar.gz support/pynacl-minimal-6ef7f091.t
 
 clean:
 	-rm -rf venv virtualenv-1.9.1
+
+app:
+	-rm -rf build-app
+	mkdir build-app
+	mkdir build-app/lib
+	cp -r venv/lib/python2.7/site-packages/* build-app/lib/
+	cp -r toolbed build-app/lib/toolbed
+	cp toolbed-app-entry.py build-app/lib/__main__.py
+# zope.interface does some weird "namespace package" hack with a .pth file,
+# that doesn't seem to work from within a zipefile. Emulate what they do.
+	touch build-app/lib/zope/__init__.py
+
+	cd build-app/lib && zip ../toolbed-lib.zip -r *
+	echo "#!/usr/bin/python" > build-app/toolbed
+	cat build-app/toolbed-lib.zip >>build-app/toolbed
+	chmod a+x build-app/toolbed
+	echo build-app/toolbed
+
+
